@@ -125,7 +125,7 @@ public class PSS {
                         System.out.println("Enter new date (YYYY-MM-DD):");
                         String newDate = scanner.nextLine();
                         addTask(new TransientTask(task.getId(), newName, newStartTime, newDuration, newDate));
-                    } else if (task instanceof Anti Task) {
+                    } else if (task instanceof AntiTask) {
                         // Handling anti-task editing would require additional logic
                         System.out.println("Anti-tasks cannot be edited directly.");
                     }
