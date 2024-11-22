@@ -1,0 +1,255 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+// Enum for task types
+enum TaskType {
+    RECURRING, TRANSIENT, ANTI_TASK
+}
+
+// Base class for Task
+abstract class Task {
+    String id; // Unique ID
+    String name;
+    String startTime; // Format: HH:mm
+    int duration; // Duration in minutes
+
+    public Task(String id, String name, String startTime, int duration) {
+        this.id = id;
+        this.name = name;
+        this.startTime = startTime;
+        this.duration = duration;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public abstract TaskType getTaskType();
+}
+
+// Recurring Task class
+class RecurringTask extends Task {
+    String startDate; // Format: YYYY-MM-DD
+    String endDate; // Format: YYYY-MM-DD
+
+    public RecurringTask(String id, String name, String startTime, int duration, String startDate, String endDate) {
+        super(id, name, startTime, duration);
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    @Override
+    public TaskType getTaskType() {
+        return TaskType.RECURRING;
+    }
+}
+
+// Transient Task class
+class TransientTask extends Task {
+    String date; // Format: YYYY-MM-DD
+
+    public TransientTask(String id, String name, String startTime, int duration, String date) {
+        super(id, name, startTime, duration);
+        this.date = date;
+    }
+
+    @Override
+    public TaskType getTaskType() {
+        return TaskType.TRANSIENT;
+    }
+}
+
+// Anti-Task class
+class AntiTask extends Task {
+    RecurringTask recurringTask;
+
+    public AntiTask(String id, String name, String startTime, int duration, RecurringTask recurringTask) {
+        super(id, name, startTime, duration);
+        this.recurringTask = recurringTask;
+    }
+
+    @Override
+    public TaskType getTaskType() {
+        return TaskType.ANTI_TASK;
+    }
+}
+
+// Main scheduling tool
+public class PSS {
+    private List<Task> tasks = new ArrayList<>();
+    private Scanner scanner = new Scanner(System.in);
+    private int taskCounter = 1; // Counter for unique IDs
+
+    // Method to generate a unique ID
+    private String generateUniqueId() {
+        return String.format("%03d", taskCounter++);
+    }
+
+    public void addTask(Task task) {
+        tasks.add(task);
+        System.out.println("Task added: " + task.getName() + " with ID: " + task.getId());
+    }
+
+    public void removeTask(String id) {
+        tasks.removeIf(task -> task.getId().equals(id));
+        System.out.println("Task removed with ID: " + id);
+    }
+
+    public void editTask(String id) {
+        for (Task task : tasks) {
+            if (task.getId().equals(id)) {
+                System.out.println("Editing task: " + task.getName());
+                System.out.println("Enter new name:");
+                String newName = scanner.nextLine();
+                System.out.println("Enter new start time (HH:mm):");
+                String newStartTime = scanner.nextLine();
+                System.out.println("Enter new duration (in minutes):");
+                int newDuration = Integer.parseInt(scanner.nextLine());
+
+                if (task instanceof RecurringTask) {
+                    // Additional input for recurring task
+                    System.out.println("Enter new start date (YYYY-MM-DD):");
+                    String newStartDate = scanner.nextLine();
+                    System.out.println("Enter new end date (YYYY-MM-DD):");
+                    String newEndDate = scanner.nextLine();
+                    tasks.remove(task);
+                    addTask(new RecurringTask(task.getId(), newName, newStartTime, newDuration, newStartDate, newEndDate));
+                } else {
+                    tasks.remove(task);
+                    if (task instanceof TransientTask) {
+                        System.out.println("Enter new date (YYYY-MM-DD):");
+                        String newDate = scanner.nextLine();
+                        addTask(new TransientTask(task.getId(), newName, newStartTime, newDuration, newDate));
+                    } else if (task instanceof Anti Task) {
+                        // Handling anti-task editing would require additional logic
+                        System.out.println("Anti-tasks cannot be edited directly.");
+                    }
+                }
+                return;
+            }
+        }
+        System.out.println("Task not found.");
+    }
+
+    public void readTasks() {
+        if (tasks.isEmpty()) {
+            System.out.println("No tasks available.");
+        } else {
+            for (Task task : tasks) {
+                String taskDetails = "Task ID: " + task.getId() + ", Name: " + task.getName() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
+                if (task instanceof TransientTask) {
+                    taskDetails += ", Date: " + ((TransientTask) task).date;
+                } else if (task instanceof RecurringTask) {
+                    taskDetails += ", Start Date: " + ((RecurringTask) task).startDate + ", End Date: " + ((RecurringTask) task).endDate;
+                }
+                System.out.println(taskDetails);
+            }
+        }
+    }
+
+    public void searchTask(String id) {
+        for (Task task : tasks) {
+            if (task.getId().equals(id)) {
+                String taskDetails = "Found Task: ID: " + task.getId() + ", Name: " + task.getName() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
+                if (task instanceof TransientTask) {
+                    taskDetails += ", Date: " + ((TransientTask) task).date;
+                } else if (task instanceof RecurringTask) {
+                    taskDetails += ", Start Date: " + ((RecurringTask) task).startDate + ", End Date: " + ((RecurringTask) task).endDate;
+                }
+                System.out.println(taskDetails);
+                return;
+            }
+        }
+        System.out.println("Task not found.");
+    }
+
+    public static void main(String[] args) {
+        PSS pss = new PSS();
+        Scanner scanner = new Scanner(System.in);
+        String command;
+
+        while (true) {
+            System.out.println("Enter command (add, remove, edit, read, search, exit):");
+            command = scanner.nextLine();
+
+            switch (command.toLowerCase()) {
+                case "add":
+                    System.out.println("Enter task type (recurring, transient, anti-task):");
+                    String type = scanner.nextLine();
+                    System.out.println("Enter task name:");
+                    String name = scanner.nextLine();
+                    System.out.println("Enter start time (HH:mm):");
+                    String startTime = scanner.nextLine();
+                    System.out.println("Enter duration (in minutes):");
+                    int duration = Integer.parseInt(scanner.nextLine());
+                    String id = pss.generateUniqueId();
+
+                    if (type.equalsIgnoreCase("recurring")) {
+                        System.out.println("Enter start date (YYYY-MM-DD):");
+                        String startDate = scanner.nextLine();
+                        System.out.println("Enter end date (YYYY-MM-DD):");
+                        String endDate = scanner.nextLine();
+                        pss.addTask(new RecurringTask(id, name, startTime, duration, startDate, endDate));
+                    } else if (type.equalsIgnoreCase("transient")) {
+                        System.out.println("Enter date (YYYY-MM-DD):");
+                        String date = scanner.nextLine();
+                        pss.addTask(new TransientTask(id, name, startTime, duration, date));
+                    } else if (type.equalsIgnoreCase("anti-task")) {
+                        // Logic to select a recurring task to cancel
+                        System.out.println("Enter the ID of the recurring task to cancel:");
+                        String recurringTaskId = scanner.nextLine();
+                        RecurringTask recurringTask = null;
+                        for (Task task : pss.tasks) {
+                            if (task instanceof RecurringTask && task.getId().equals(recurringTaskId)) {
+                                recurringTask = (RecurringTask) task;
+                                break;
+                            }
+                        }
+                        if (recurringTask != null) {
+                            pss.addTask(new AntiTask(id, name, startTime, duration, recurringTask));
+                        } else {
+                            System.out.println("Recurring task not found.");
+                        }
+                    } else {
+                        System.out.println("Invalid task type.");
+                    }
+                    break;
+
+                case "remove":
+                    System.out.println("Enter task ID to remove:");
+                    String removeId = scanner.nextLine();
+                    pss.removeTask(removeId);
+                    break;
+
+                case "edit":
+                    System.out.println("Enter task ID to edit:");
+                    String editId = scanner.nextLine();
+                    pss.editTask(editId);
+                    break;
+
+                case "read":
+                    pss.readTasks();
+                    break;
+
+                case "search":
+                    System.out.println(" Enter task ID to search:");
+                    String searchId = scanner.nextLine();
+                    pss.searchTask(searchId);
+                    break;
+
+                case "exit":
+                    System.out.println("Exiting the program.");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid command.");
+            }
+        }
+    }
+}
