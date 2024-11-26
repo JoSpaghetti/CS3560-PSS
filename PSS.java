@@ -129,13 +129,14 @@ public class PSS {
     // work in progress
     public void readFromFile(String fileName){
             // testing 
-            String json = "{\n" +
-            "    \"name\": \"John Doe\",\n" +
-            "    \"type\": 30,\n" +
-            "    \"isEmployed\": true,\n" +
-            "    \"address\": null,\n" +
-            "    \"city\": \"New York\"\n" +
-            "}";
+            String json = """
+                    {
+                        "name": "John Doe",
+                        "type": 30,
+                        "isEmployed": true,
+                        "address": null,
+                        "city": "New York"
+                    }""";
 
             // Write the JSON string to a file
             try (BufferedWriter writeTest = new BufferedWriter(new FileWriter("testWrite.json"))) {
@@ -174,7 +175,6 @@ public class PSS {
         } catch (FileNotFoundException e) {
             System.out.println("Couldn't find a file of that name, please try again.");
         }
-
     }
 
     // Method to search for a task by ID
@@ -196,34 +196,64 @@ public class PSS {
         System.out.println("Task not found."); // If task ID does not match
     }
 
-    public void writeToFile () throws IOException {
+    public void showSchedule(){
+        String jsonFormat; //used to recreate JSON structure
+        String taskType; //used to store task type
+        for (Task task: tasks) {
+            taskType = String.valueOf(task.getTaskType());
+
+            //use string format to format JSON output
+            if (task instanceof RecurringTask) { //need frequency
+                jsonFormat = String.format("\n \"ID\": \"%s\", \"Name\": \"%s\", \"Task Type\": \"%s\", \"Start Date\": \"%s\", \"Start Time\": \"%s\", \"Duration\": \"%s\", \"End Date\": \"%s\", \"Frequency\": \"%s\"",
+                        task.getId(), task.getName(), task.getType(), ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+            } else if (task instanceof TransientTask) {
+                jsonFormat = String.format("\n \"ID\": \"%s\", \"Name\": \"%s\", \"Task Type\": \"%s\", \"Date\": \"%s\", \"Start Time\": \"%s\", \"Duration\": \"%s\"",
+                        task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+            } else if (task instanceof AntiTask) { //need date function
+                jsonFormat = String.format("\n \"ID\": \"%s\", \"Name\": \"%s\", \"Task Type\": \"%s\", \"Date\": \"%s\", \"Start Time\": \"%s\", \"Duration\": \"%s\"",
+                        task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
+            } else {
+                jsonFormat = "Error";
+            }
+            System.out.print(jsonFormat);
+        }
+    }
+
+    public void writeToFile (String fileSource) throws IOException {
         try {
-            FileWriter writer = new FileWriter("output.txt");
+            FileWriter writer = new FileWriter(fileSource + ".json");
             String jsonFormat; //used to recreate JSON structure
             String taskType; //used to store task type
             writer.write("[\n");
+            int count = 0;
             for (Task task: tasks) {
                 taskType = String.valueOf(task.getTaskType());
 
                 //use string format to format JSON output
                 if (task instanceof RecurringTask) { //need frequency
-                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Start Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t\t\"End Date\": \"%s\", \n\t\t\"Frequency\": \"%s\" \n\t}\n",
-                            task.getId(),task.getName(),taskType, ((RecurringTask) task).startDate, task.startTime,task.duration, ((RecurringTask) task).endDate, task.startTime );
+                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Start Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t\t\"End Date\": \"%s\", \n\t\t\"Frequency\": \"%s\" \n\t}",
+                            task.getId(),task.getName(),task.getType(), ((RecurringTask) task).startDate, task.startTime,task.duration, ((RecurringTask) task).endDate, task.startTime );
                 }
                 else if (task instanceof TransientTask) {
-                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t}\n",
+                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\" \n\t}",
                             task.getId(),task.getName(),taskType,((TransientTask) task).date, task.startTime, task.duration);
                 }
                 else if (task instanceof AntiTask) { //need date function
-                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t}\n",
+                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\" \n\t}",
                             task.getId(),task.getName(),taskType, task.duration, task.startTime,task.duration );
                 }
                 else {
                     jsonFormat = "Null";
                 }
+                //adds "," at the end of every json block
+                if (++count == tasks.size() ) {
+                    jsonFormat += "\n";
+                } else {
+                    jsonFormat += ",\n";
+                }
                 writer.write(jsonFormat);
             }
-            writer.write("[");
+            writer.write("]");
             writer.close();//closes file to stop memory leak issues
 
         } catch (Exception ex) {//if IO exception is thrown, stack trace is posted

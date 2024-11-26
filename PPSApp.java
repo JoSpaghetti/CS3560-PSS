@@ -11,7 +11,7 @@ public class PPSApp{
 
         // Main loop for user interaction
         while (true) {
-            System.out.print("\n[1] add\n[2] remove\n[3] edit\n[4] read\n[5] search\n[6] write to file\n[7] read from file\n[8] exit\nEnter command from above options: " );
+            System.out.print("\n[1] add\n[2] remove\n[3] edit\n[4] read\n[5] search\n[6] write to file\n[7] read from file\n[8] view schedule \n[9] exit\nEnter command from above options: " );
             command = Integer.parseInt(scanner.nextLine()); // Read user command
 
             switch (command) {
@@ -125,19 +125,24 @@ public class PPSApp{
                     break;
 
                 case 6: //write to File
-                    System.out.print("Writing to file\n");
-                    pss.writeToFile();
+                    System.out.print("Enter file name (no file type needed):");
+                    String fileName = scanner.nextLine();
+                    pss.writeToFile(fileName);
                     System.out.print("File Written\n");
                     break;
 
                 case 7: // read from file
-                    System.out.println("Enter file name:");
+                    System.out.println("Enter file name (no file type needed):");
                     String file = scanner.nextLine();
                     pss.readFromFile(file); // Search for task by ID
                     break;
 
-                
-                case 8: //exit
+                case 8: //view schedule
+                    System.out.print("-Schedule-");
+                    pss.showSchedule();
+                    break;
+
+                case 9: //exit
                     System.out.println("Exiting the program."); // Exit message
                     scanner.close(); // Close the scanner
                     return; // Exit the program
