@@ -26,6 +26,10 @@ abstract class Task {
         return name;
     }
 
+    public String getStartTime() {
+        return startTime;
+    }
+
     // returns the task category
     public String getType() {
         return type;

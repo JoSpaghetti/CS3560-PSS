@@ -11,6 +11,10 @@ class RecurringTask extends Task {
         this.endDate = endDate;
     }
 
+    public String getStartDate(){
+        return startDate;
+    } 
+
     // Override method to return task type
     @Override
     public TaskType getTaskType() {

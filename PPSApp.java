@@ -86,7 +86,7 @@ public class PPSApp{
                                 }
                                 id = pss.generateUniqueId(); // Generate unique ID for the task
                                 if (recurringTask != null) {
-                                    pss.addTask(new AntiTask(id, name, startTime, "Cancelation", duration, recurringTask)); // Add anti-task
+                                    pss.addTask(new AntiTask(id, name, startTime, "Cancellation", duration, recurringTask)); // Add anti-task
                                 } else {
                                     System.out.println("Recurring task not found."); // Handle case where recurring task is not found
                                 }
