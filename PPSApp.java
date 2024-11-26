@@ -1,29 +1,29 @@
+import java.io.IOException;
 import java.util.Scanner;
 
 
 public class PPSApp{
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         PSS pss = new PSS(); // Create an instance of the scheduling program
         Scanner scanner = new Scanner(System.in); // Scanner for user input
         int command; // Variable to hold user commands
 
         // Main loop for user interaction
         while (true) {
-            System.out.print("[1] add\n[2] remove\n[3] edit\n[4] read\n[5] search\n[6] read file\n[7] exit\nEnter command from above options: " );
+            System.out.print("[1] add\n[2] remove\n[3] edit\n[4] read\n[5] search\n[6] write to file\n[7] read from file\n[8] exit\nEnter command from above options: " );
             command = Integer.parseInt(scanner.nextLine()); // Read user command
 
             switch (command) {
                 case 1: //add
                     // Prompt for task details
                     boolean added = false;
+                    String name;
+                    String startTime;
+                    int duration;
+                    String id;
                     while(!added){
                         System.out.print("\nTask Types:\n[1] recurring\n[2] transient\n[3] anti-task\n[4] back to main menu\nEnter task type: ");
                         int type = Integer.parseInt(scanner.nextLine());
-                        String name;
-                        String startTime;
-                        int duration;
-                        String id;
-
                         // Add task based on type
                         if(type == 4){
                             added = true;
@@ -70,10 +70,6 @@ public class PPSApp{
                                     System.out.println("Recurring task not found."); // Handle case where recurring task is not found
                                 }
                             }
-                            // reselect
-                            else if (type == 4){
-                                added = true;
-                            }
                         
                         // breaks out of the while loop because the task has been added
                         added = true;
@@ -107,13 +103,19 @@ public class PPSApp{
                     pss.searchTask(searchId); // Search for task by ID
                     break;
 
-                case 6: //search
+                case 6: //write to File
+                    System.out.print("Writing to file\n");
+                    pss.writeToFile();
+                    System.out.print("File Written\n");
+                    break;
+
+                case 7: // read from file
                     System.out.println("Enter file name:");
                     String file = scanner.nextLine();
                     pss.readFromFile(file); // Search for task by ID
-                    break;
 
-                case 7: //exit
+                
+                case 8: //exit
                     System.out.println("Exiting the program."); // Exit message
                     scanner.close(); // Close the scanner
                     return; // Exit the program
