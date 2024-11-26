@@ -113,6 +113,7 @@ public class PPSApp{
                     System.out.println("Enter file name:");
                     String file = scanner.nextLine();
                     pss.readFromFile(file); // Search for task by ID
+                    break;
 
                 
                 case 8: //exit
