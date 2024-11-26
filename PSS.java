@@ -241,17 +241,17 @@ public class PSS {
         String jsonFormat; //used to recreate JSON structure
         String taskType; //used to store task type
         for (Task task: tasks) {
-            taskType = String.valueOf(task.getTaskType());
+            taskType = String.valueOf(task.getType());
 
             //use string format to format JSON output
             if (task instanceof RecurringTask) { //need frequency
-                jsonFormat = String.format("\n \"ID\": \"%s\", \"Name\": \"%s\", \"Task Type\": \"%s\", \"Start Date\": \"%s\", \"Start Time\": \"%s\", \"Duration\": \"%s\", \"End Date\": \"%s\", \"Frequency\": \"%s\"",
-                        task.getId(), task.getName(), task.getType(), ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
+                        task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
             } else if (task instanceof TransientTask) {
-                jsonFormat = String.format("\n \"ID\": \"%s\", \"Name\": \"%s\", \"Task Type\": \"%s\", \"Date\": \"%s\", \"Start Time\": \"%s\", \"Duration\": \"%s\"",
+                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
                         task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
             } else if (task instanceof AntiTask) { //need date function
-                jsonFormat = String.format("\n \"ID\": \"%s\", \"Name\": \"%s\", \"Task Type\": \"%s\", \"Date\": \"%s\", \"Start Time\": \"%s\", \"Duration\": \"%s\"",
+                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
                         task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
             } else {
                 jsonFormat = "Error";
@@ -268,7 +268,7 @@ public class PSS {
             writer.write("[\n");
             int count = 0;
             for (Task task: tasks) {
-                taskType = String.valueOf(task.getTaskType());
+                taskType = String.valueOf(task.getType());
 
                 //use string format to format JSON output
                 if (task instanceof RecurringTask) { //need frequency
