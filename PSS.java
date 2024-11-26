@@ -191,8 +191,8 @@ public class PSS {
                     addTask(new TransientTask(generateUniqueId(), taskName, startTime, curTaskType, duration, startDate));
                 } 
                 else{
-                    for (int i = 0; i < recurringTaskTypes.length; i++) {
-                        if (recurringTaskTypes[i].equals(curTaskType)) {
+                    for (String recurringTaskType : recurringTaskTypes) {
+                        if (recurringTaskType.equals(curTaskType)) {
                             break;
                         }
                     }
