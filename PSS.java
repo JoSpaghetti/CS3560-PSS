@@ -1,6 +1,11 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.io.File; 
+import java.io.FileNotFoundException;  
+
 
 // Enum for task types
 enum TaskType {
@@ -90,6 +95,36 @@ public class PSS {
                 System.out.println(taskDetails); // Display task details
             }
         }
+    }
+
+    // creates tasks from a file
+    // work in progress
+    public void readFromFile(String fileName){
+        try{
+            String name = fileName + ".json";
+            File inputFile = new File(name);
+            Scanner reader = new Scanner(inputFile);
+
+            StringBuilder jsonContent = new StringBuilder();
+            while (reader.hasNextLine()) {
+                jsonContent.append(reader.nextLine());
+            }
+            String regex = "\"(.*?)\"\\s*:\\s*(\"(.*?)\"|\\d+|true|false|null)";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(jsonContent.toString());
+
+            while (matcher.find()) {
+                String key = matcher.group(1);
+                String value = matcher.group(2);
+                System.out.println("Key: " + key + ", Value: " + value);
+            }
+
+            reader.close(); 
+
+        } catch (FileNotFoundException e) {
+            System.out.println("Couldn't find a file of that name, please try again.");
+        }
+
     }
 
     // Method to search for a task by ID

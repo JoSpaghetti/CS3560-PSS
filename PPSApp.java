@@ -9,7 +9,7 @@ public class PPSApp{
 
         // Main loop for user interaction
         while (true) {
-            System.out.print("[1] add\n[2] remove\n[3] edit\n[4] read\n[5] search\n[6] exit\nEnter command from above options: " );
+            System.out.print("[1] add\n[2] remove\n[3] edit\n[4] read\n[5] search\n[6] read file\n[7] exit\nEnter command from above options: " );
             command = Integer.parseInt(scanner.nextLine()); // Read user command
 
             switch (command) {
@@ -107,7 +107,13 @@ public class PPSApp{
                     pss.searchTask(searchId); // Search for task by ID
                     break;
 
-                case 6: //exit
+                case 6: //search
+                    System.out.println("Enter file name:");
+                    String file = scanner.nextLine();
+                    pss.readFromFile(file); // Search for task by ID
+                    break;
+
+                case 7: //exit
                     System.out.println("Exiting the program."); // Exit message
                     scanner.close(); // Close the scanner
                     return; // Exit the program
