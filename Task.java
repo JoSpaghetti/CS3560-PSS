@@ -3,13 +3,16 @@ abstract class Task {
     String id; // Unique ID for each task
     String name; // Name of the task
     String startTime; // Start time of the task in HH:mm format
+    String type; // the type/category of the task
     int duration; // Duration of the task in minutes
 
+
     // Constructor to initialize task properties
-    public Task(String id, String name, String startTime, int duration) {
+    public Task(String id, String name, String startTime, String type, int duration) {
         this.id = id;
         this.name = name;
         this.startTime = startTime;
+        this.type = type;
         this.duration = duration;
     }
 
@@ -21,6 +24,11 @@ abstract class Task {
     // Getter for name
     public String getName() {
         return name;
+    }
+
+    // returns the task category
+    public String getType() {
+        return type;
     }
 
     // Abstract method to get the task type

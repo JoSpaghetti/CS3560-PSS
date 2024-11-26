@@ -3,8 +3,8 @@ class AntiTask extends Task {
     RecurringTask recurringTask; // Reference to the recurring task that this anti-task cancels
 
     // Constructor to initialize anti-task properties
-    public AntiTask(String id, String name, String startTime, int duration, RecurringTask recurringTask) {
-        super(id, name, startTime, duration);
+    public AntiTask(String id, String name, String startTime, String type, int duration, RecurringTask recurringTask) {
+        super(id, name, startTime, type, duration);
         this.recurringTask = recurringTask;
     }
 

@@ -6,7 +6,9 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.File; 
-import java.io.FileNotFoundException;  
+import java.io.FileNotFoundException;
+import java.io.BufferedWriter;
+
 
 
 // Enum for task types
@@ -16,6 +18,10 @@ enum TaskType {
 
 // Main scheduling tool
 public class PSS {
+
+    String[] recurringTaskTypes = {"Class", "Study", "Sleep", "Exercise", "Work", "Meal"};
+    String[] transientTaskTypes = {"Visit", "Shopping", "Appointment"};
+    String[] antiTaskTypes = {"Cancelation"};
     private List<Task> tasks = new ArrayList<>(); // List to hold all tasks
     private Scanner scanner = new Scanner(System.in); // Scanner for user input
     private int taskCounter = 1; // Counter for generating unique IDs
@@ -45,6 +51,7 @@ public class PSS {
     public void editTask(String id) {
         for (Task task : tasks) {
             // Check for the ID of each task
+            int typeNum;
             if (task.getId().equals(id)) {
                 System.out.println("Editing task: " + task.getName());
                 System.out.println("Enter new name:");
@@ -57,18 +64,22 @@ public class PSS {
                 // Method when the task is a recurring task
                 if (task instanceof RecurringTask) {
                     // Additional input
+                    System.out.println("\n[1] Class\n[2] Study\n[3] Sleep\n[4] Exercise\n[5] Work\n[6] Meal\nEnter task category:");
+                    typeNum = Integer.parseInt(scanner.nextLine());
                     System.out.println("Enter new start date (YYYY-MM-DD):");
                     String newStartDate = scanner.nextLine();
                     System.out.println("Enter new end date (YYYY-MM-DD):");
                     String newEndDate = scanner.nextLine();
                     tasks.remove(task); // Remove old task
-                    addTask(new RecurringTask(task.getId(), newName, newStartTime, newDuration, newStartDate, newEndDate )); // Add updated recurring task
+                    addTask(new RecurringTask(task.getId(), newName, newStartTime, getType("recurring", typeNum), newDuration, newStartDate, newEndDate )); // Add updated recurring task
                 } else {
                     tasks.remove(task); // Remove old task
                     if (task instanceof TransientTask) {
+                        System.out.println("\n[1] Visit\n[2] Shopping\n[3] Appointment\nEnter task category:");
+                        typeNum = Integer.parseInt(scanner.nextLine());
                         System.out.println("Enter new date (YYYY-MM-DD):");
                         String newDate = scanner.nextLine();
-                        addTask(new TransientTask(task.getId(), newName, newStartTime, newDuration, newDate)); // Add updated transient task
+                        addTask(new TransientTask(task.getId(), newName, newStartTime, getType("transient", typeNum), newDuration, newDate)); // Add updated transient task
                     } else if (task instanceof AntiTask) {
                         // Handling anti-task editing would require additional logic
                         System.out.println("Anti-tasks cannot be edited directly.");
@@ -88,7 +99,7 @@ public class PSS {
         } else {
             for (Task task : tasks) {
                 // Constructing task details for display
-                String taskDetails = "Task ID: " + task.getId() + ", Name: " + task.getName() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
+                String taskDetails = "Task ID: " + task.getId() + ", Name: " + task.getName() + ", Type: " + task.getType() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
                 if (task instanceof TransientTask) {
                     taskDetails += ", Date: " + ((TransientTask) task).date; // Add date for transient tasks
                 }
@@ -100,18 +111,54 @@ public class PSS {
         }
     }
 
+    // returns the task category/type when given the corresponding number
+    // used for info to initalize a task
+    public String getType(String taskType, int taskNum){
+        if(taskType.equals("recurring")){ // recurring task types
+            return recurringTaskTypes[taskNum-1];
+        }
+        if(taskType.equals("transient")){ // transient task types
+            return transientTaskTypes[taskNum-1];
+        }
+        else{ // anti task types
+            return antiTaskTypes[0];
+        }
+    }
+
     // creates tasks from a file
     // work in progress
     public void readFromFile(String fileName){
+            // testing 
+            String json = "{\n" +
+            "    \"name\": \"John Doe\",\n" +
+            "    \"type\": 30,\n" +
+            "    \"isEmployed\": true,\n" +
+            "    \"address\": null,\n" +
+            "    \"city\": \"New York\"\n" +
+            "}";
+
+            // Write the JSON string to a file
+            try (BufferedWriter writeTest = new BufferedWriter(new FileWriter("testWrite.json"))) {
+                writeTest.write(json);
+                System.out.println("JSON written to file successfully!");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        // try catch to make sure the file exists
         try{
+            // intialize the file
             String name = fileName + ".json";
             File inputFile = new File(name);
             Scanner reader = new Scanner(inputFile);
 
+            // pull all the info from the JSON file
             StringBuilder jsonContent = new StringBuilder();
             while (reader.hasNextLine()) {
                 jsonContent.append(reader.nextLine());
             }
+
+            // creates the patterns to parse the key value pair correctly
             String regex = "\"(.*?)\"\\s*:\\s*(\"(.*?)\"|\\d+|true|false|null)";
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(jsonContent.toString());
@@ -178,6 +225,7 @@ public class PSS {
             }
             writer.write("[");
             writer.close();//closes file to stop memory leak issues
+
         } catch (Exception ex) {//if IO exception is thrown, stack trace is posted
             ex.getStackTrace();
         }

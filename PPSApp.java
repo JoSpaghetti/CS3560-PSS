@@ -3,6 +3,7 @@ import java.util.Scanner;
 
 
 public class PPSApp{
+
     public static void main(String[] args) throws IOException {
         PSS pss = new PSS(); // Create an instance of the scheduling program
         Scanner scanner = new Scanner(System.in); // Scanner for user input
@@ -10,7 +11,7 @@ public class PPSApp{
 
         // Main loop for user interaction
         while (true) {
-            System.out.print("[1] add\n[2] remove\n[3] edit\n[4] read\n[5] search\n[6] write to file\n[7] read from file\n[8] exit\nEnter command from above options: " );
+            System.out.print("\n[1] add\n[2] remove\n[3] edit\n[4] read\n[5] search\n[6] write to file\n[7] read from file\n[8] exit\nEnter command from above options: " );
             command = Integer.parseInt(scanner.nextLine()); // Read user command
 
             switch (command) {
@@ -21,38 +22,58 @@ public class PPSApp{
                     String startTime;
                     int duration;
                     String id;
+                    int typeNum;
+
                     while(!added){
                         System.out.print("\nTask Types:\n[1] recurring\n[2] transient\n[3] anti-task\n[4] back to main menu\nEnter task type: ");
-                        int type = Integer.parseInt(scanner.nextLine());
+                        int taskType = Integer.parseInt(scanner.nextLine());
                         // Add task based on type
-                        if(type == 4){
+                        if(taskType == 4){
                             added = true;
                         }
-                        else if(type < 4){
+                        else if(taskType < 4){
                             System.out.println("Enter task name:");
                             name = scanner.nextLine();
                             System.out.println("Enter start time (HH:mm):");
                             startTime = scanner.nextLine();
                             System.out.println("Enter duration (in minutes):");
                             duration = Integer.parseInt(scanner.nextLine());
+                            
                         // recurring tasks
-                            if (type == 1) {
-                                System.out.println("Enter start date (YYYY-MM-DD):");
-                                String startDate = scanner.nextLine();
-                                System.out.println("Enter end date (YYYY-MM-DD):");
-                                String endDate = scanner.nextLine();
-                                id = pss.generateUniqueId(); // Generate unique ID for the task
-                                pss.addTask(new RecurringTask(id, name, startTime, duration, startDate, endDate)); // Add recurring task
+                            if (taskType == 1) {
+                                System.out.println("\n[1] Class\n[2] Study\n[3] Sleep\n[4] Exercise\n[5] Work\n[6] Meal\nEnter task category: ");
+                                typeNum = Integer.parseInt(scanner.nextLine()); //test
+                                if(typeNum < 7 && typeNum > 0){
+                                    System.out.println("Enter start date (YYYY-MM-DD):");
+                                    String startDate = scanner.nextLine();
+                                    System.out.println("Enter end date (YYYY-MM-DD):");
+                                    String endDate = scanner.nextLine();
+                                    id = pss.generateUniqueId(); // Generate unique ID for the task
+                                    pss.addTask(new RecurringTask(id, name, startTime, pss.getType("recurring", typeNum), duration, startDate, endDate)); // Add recurring task
+                                }
+                                else{
+                                    System.out.println("Please enter a valid task type and try again.");
+                                    break;
+                                }
+
                             } 
                             // transient tasks
-                            else if (type == 2) {
-                                System.out.println("Enter date (YYYY-MM-DD):");
-                                String date = scanner.nextLine();
-                                id = pss.generateUniqueId(); // Generate unique ID for the task
-                                pss.addTask(new TransientTask(id, name, startTime, duration, date)); // Add transient task
+                            else if (taskType == 2) {
+                                System.out.println("\n[1] Visit\n[2] Shopping\n[3] Appointment\nEnter task category:");
+                                typeNum = Integer.parseInt(scanner.nextLine());
+                                if(typeNum < 4 && typeNum > 0){
+                                    System.out.println("Enter date (YYYY-MM-DD):");
+                                    String date = scanner.nextLine();
+                                    id = pss.generateUniqueId(); // Generate unique ID for the task
+                                    pss.addTask(new TransientTask(id, name, startTime, pss.getType("transient", typeNum), duration, date)); // Add transient task
+                                }
+                                else{
+                                    System.out.println("Please enter a valid task type and try again.");
+                                    break;
+                                }
                             } 
                             // anti-tasks
-                            else if (type == 3) {
+                            else if (taskType == 3) {
                                 // Logic to select a recurring task to cancel
                                 System.out.println("Enter the ID of the recurring task to cancel:");
                                 String recurringTaskId = scanner.nextLine();
@@ -65,7 +86,7 @@ public class PPSApp{
                                 }
                                 id = pss.generateUniqueId(); // Generate unique ID for the task
                                 if (recurringTask != null) {
-                                    pss.addTask(new AntiTask(id, name, startTime, duration, recurringTask)); // Add anti-task
+                                    pss.addTask(new AntiTask(id, name, startTime, "Cancelation", duration, recurringTask)); // Add anti-task
                                 } else {
                                     System.out.println("Recurring task not found."); // Handle case where recurring task is not found
                                 }

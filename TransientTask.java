@@ -2,8 +2,8 @@ class TransientTask extends Task {
     String date; // Date of the transient task in YYYY-MM-DD format
 
     // Constructor to initialize transient task properties
-    public TransientTask(String id, String name, String startTime, int duration, String date) {
-        super(id, name, startTime, duration);
+    public TransientTask(String id, String name, String startTime, String type, int duration, String date) {
+        super(id, name, startTime, type, duration);
         this.date = date;
     }
 
