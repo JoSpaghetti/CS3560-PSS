@@ -1,3 +1,5 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -84,7 +86,8 @@ public class PSS {
                 String taskDetails = "Task ID: " + task.getId() + ", Name: " + task.getName() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
                 if (task instanceof TransientTask) {
                     taskDetails += ", Date: " + ((TransientTask) task).date; // Add date for transient tasks
-                } else if (task instanceof RecurringTask) {
+                }
+                else if (task instanceof RecurringTask) {
                     taskDetails += ", Start Date: " + ((RecurringTask) task).startDate + ", End Date: " + ((RecurringTask) task).endDate; // Add dates for recurring tasks
                 }
                 System.out.println(taskDetails); // Display task details
@@ -100,7 +103,8 @@ public class PSS {
                 String taskDetails = "Found Task: ID: " + task.getId() + ", Name: " + task.getName() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
                 if (task instanceof TransientTask) {
                     taskDetails += ", Date: " + ((TransientTask) task).date; // Add date for transient tasks
-                } else if (task instanceof RecurringTask) {
+                }
+                else if (task instanceof RecurringTask) {
                     taskDetails += ", Start Date: " + ((RecurringTask) task).startDate + ", End Date: " + ((RecurringTask) task).endDate; // Add dates for recurring tasks
                 }
                 System.out.println(taskDetails); // Display found task details
@@ -110,4 +114,37 @@ public class PSS {
         System.out.println("Task not found."); // If task ID does not match
     }
 
+    public void writeToFile () throws IOException {
+        try {
+            FileWriter writer = new FileWriter("output.txt");
+            String jsonFormat; //used to recreate JSON structure
+            String taskType; //used to store task type
+            writer.write("[\n");
+            for (Task task: tasks) {
+                taskType = String.valueOf(task.getTaskType());
+
+                //use string format to format JSON output
+                if (task instanceof RecurringTask) { //need frequency
+                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Start Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t\t\"End Date\": \"%s\", \n\t\t\"Frequency\": \"%s\" \n\t}\n",
+                            task.getId(),task.getName(),taskType, ((RecurringTask) task).startDate, task.startTime,task.duration, ((RecurringTask) task).endDate, task.startTime );
+                }
+                else if (task instanceof TransientTask) {
+                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t}\n",
+                            task.getId(),task.getName(),taskType,((TransientTask) task).date, task.startTime, task.duration);
+                }
+                else if (task instanceof AntiTask) { //need date function
+                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t}\n",
+                            task.getId(),task.getName(),taskType, task.duration, task.startTime,task.duration );
+                }
+                else {
+                    jsonFormat = "Null";
+                }
+                writer.write(jsonFormat);
+            }
+            writer.write("[");
+            writer.close();//closes file to stop memory leak issues
+        } catch (Exception ex) {//if IO exception is thrown, stack trace is posted
+            ex.getStackTrace();
+        }
+    }
 }
