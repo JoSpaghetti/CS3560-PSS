@@ -1,5 +1,6 @@
 [
     {
+
         "Name" : "Go to Store for socks",
         "Type" : "Shopping",
         "Date" : 20200415,
@@ -13,7 +14,7 @@
         "StartTime" : 10.25,
         "Duration" : 0.75,
         "EndDate" : 20200715,
-        "Frequency" : 7
+        "Frequency" : 7   
     },
     {
         "Name" : "I really didn't want to walk",
@@ -22,5 +23,5 @@
         "StartTime" : 10.25,
         "Duration" : 0.75
     }
-        
+
 ]
