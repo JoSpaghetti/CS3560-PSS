@@ -39,8 +39,9 @@ public class TimeValidator {
                 durationValid = true;
             }
         }
-        try {
-            duration = Double.parseDouble(tempDuration);
+
+        try { //try catch prevents program from crashing if double is instantiated wrong
+            duration = Double.parseDouble(hourIncrementer(tempDuration, '.')); //
         } catch (NumberFormatException num){
             System.out.print ("Error: Duration Formatting failed");
         }
@@ -60,7 +61,8 @@ public class TimeValidator {
                 hourValid = true;
             }
         }
-        String hour = tempHour;
+
+        String hour = hourIncrementer(tempHour, ':');
         return hour;
     }
     private boolean dateFormatValidator (String date) { //checks for date format
@@ -83,6 +85,26 @@ public class TimeValidator {
         Matcher dateMatcher = datePattern.matcher(hour);
 
         return dateMatcher.matches();
+    }
+
+    public int dateOverlap (String beforeDate, String afterDate) {
+        int year1 = intErrHandler (beforeDate.substring(0,3), "Year"); //turns the string into an int value
+        int month1 = intErrHandler (beforeDate.substring(5,7), "Month");
+        int day1 = intErrHandler (beforeDate.substring(8,10), "Day");
+        double tempDate1 = Double.parseDouble(String.valueOf(year1) + String.valueOf(month1) + String.valueOf(day1)); //creates a concatenation of the date
+
+        int year2 = intErrHandler (afterDate.substring(0,3), "Year");
+        int month2 = intErrHandler (afterDate.substring(5,7), "Month");
+        int day2 = intErrHandler (afterDate.substring(8,10), "Day");
+        double tempDate2 = Double.parseDouble(String.valueOf(year2) + String.valueOf(month2) + String.valueOf(day2)); //creates a concatenation of the date
+
+        if (tempDate2 < tempDate1) {
+            return 1;
+        }
+        if (tempDate2 == tempDate1) {
+            return 2;
+        }
+        return 0;
     }
 
     private boolean dateExistsValidator (String date) {//checks if date is valid
@@ -127,8 +149,29 @@ public class TimeValidator {
         int hour = intErrHandler (hourString.substring(0,2), "Hour");
         int minute = intErrHandler (hourString.substring(3,5), "Minute");
 
-        //if hour is between 0 and 12 (not using military time) and minute is between 0 and 59
+        //if hour is between 0 and 23 (using military time) and minute is between 0 and 59
         return ((hour >= 0 && hour <= 23) && (minute >= 0 && minute <= 59));
+    }
+    private String hourIncrementer (String hourString, char separator) { //rounds up code to nearest 15 minutes
+        //turns first strings into integers
+        int hour = intErrHandler (hourString.substring(0,2), "Hour");
+        int minute = intErrHandler (hourString.substring(3,5), "Minute");
+        int tempMinute = minute;
+        int tempHour = hour;
+
+        if (minute > 0 && minute <= 15 ) {
+            tempMinute = 25;
+        } else if (minute > 15 && minute <= 30 ) {
+            tempMinute = 50;
+        } else if (minute > 30 && minute <=45) {
+            tempMinute = 75;
+        } else if (minute > 45 && minute <= 59) {
+            tempMinute = 0;
+            if (hour == 23) { tempHour = 0; }
+            else { tempHour++; }
+        }
+
+        return (String.valueOf(tempHour) + separator + String.valueOf(tempMinute)); //final string value;
     }
 
     private int intErrHandler(String intCheck, String type) {

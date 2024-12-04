@@ -55,20 +55,9 @@ public class PSS {
                 System.out.println("Enter new name:");
                 String newName = nameValidation("Enter new task name:");
 
-                /*
-                System.out.println("Enter new start time (HH:mm):");
-                String newStartTime = scanner.nextLine();
+                String newStartTime = timeValidator.hourValidator("Enter new start time (HH:mm):");
 
-                 */
-
-                String newStartTime = timeValidator.hourValidator("Enter new start time (HH.mm):");
-
-                /*/
-                System.out.println("Enter new duration (in minutes):");
-                int newDuration = Integer.parseInt(scanner.nextLine());
-
-                 */
-                double newDuration = timeValidator.durationValidator("Enter new duration (HH:mm):");
+                double newDuration = timeValidator.durationValidator("Enter new duration (HH.mm):");
 
                 // Method when the task is a recurring task
                 if (task instanceof RecurringTask) {
@@ -76,17 +65,22 @@ public class PSS {
                     System.out.println("\n[1] Class\n[2] Study\n[3] Sleep\n[4] Exercise\n[5] Work\n[6] Meal\nEnter task category:");
                     typeNum = Integer.parseInt(scanner.nextLine());
 
-                    /*
-                    System.out.println("Enter new start date (YYYY-MM-DD):");
-                    String newStartDate = scanner.nextLine();
-                    */
-                    String newStartDate = timeValidator.dateValidator("Enter new start date (YYYY-MM-DD):");
-                    /*
-                    System.out.println("Enter new end date (YYYY-MM-DD):");
-                    String newEndDate = scanner.nextLine();
+                    boolean isStartBeforeEnd = false;
+                    String newStartDate = "";
+                    String newEndDate = "";
+                    while (!isStartBeforeEnd) {
+                        newStartDate = timeValidator.dateValidator("Enter new start date (YYYY-MM-DD):");
+                        newEndDate = timeValidator.dateValidator("Enter new end date (YYYY-MM-DD):");
 
-                     */
-                    String newEndDate = timeValidator.dateValidator("Enter new end date (YYYY-MM-DD):");
+                        int startBeforeEnd = timeValidator.dateOverlap(newStartDate, newEndDate);//validates the start and end times
+                        if (startBeforeEnd == 1) {//check to see if the end date equals the start date
+                            System.out.print("Error: End Date is before Start Date. Please try again");
+                        } else if (startBeforeEnd == 2) {
+                            System.out.print("Error: End Date equals Start Date. Please try again");
+                        } else if (startBeforeEnd == 0) {
+                            isStartBeforeEnd = true;
+                        }
+                    }
                     tasks.remove(task); // Remove old task
                     addTask(new RecurringTask(task.getId(), newName, newStartTime, getType("recurring", typeNum), newDuration, newStartDate, newEndDate )); // Add updated recurring task
                 } else {
@@ -94,11 +88,7 @@ public class PSS {
                     if (task instanceof TransientTask) {
                         System.out.println("\n[1] Visit\n[2] Shopping\n[3] Appointment\nEnter task category:");
                         typeNum = Integer.parseInt(scanner.nextLine());
-                        /*
-                        System.out.println("Enter new date (YYYY-MM-DD):");
-                        String newDate = scanner.nextLine();
 
-                         */
                         String newDate = timeValidator.dateValidator("Enter new date (YYYY-MM-DD):");
 
                         addTask(new TransientTask(task.getId(), newName, newStartTime, getType("transient", typeNum), newDuration, newDate)); // Add updated transient task
@@ -240,9 +230,9 @@ public class PSS {
     }
 
     // Method to search for a task by ID
-    public void searchTask(String id) {
+    public void searchTask(String identification) {
         for (Task task : tasks) {
-            if (task.getId().equals(id)) {
+            if (task.getId().equals(identification) || task.getName().equals(identification)) {
                 // Constructing task details for display
                 String taskDetails = "Found Task: ID: " + task.getId() + ", Name: " + task.getName() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
                 if (task instanceof TransientTask) {
@@ -287,16 +277,18 @@ public class PSS {
         while (!nameValid) {
             System.out.print(promptUser);
             name = scanner.nextLine();
-            for (Task task: tasks) {
-                if (task.getName().equals(name)) { //if the task name already exists, it enters the loop
-                    System.out.print("Task Name Already Exists, try again!");
-                    nameValid = false;
-                } else {
-                    nameValid=true;
-                }
-            }
-            if (tasks.size() == 0) {
+
+            if (tasks.size() == 0) { //when zero tasks are initialized, the for loop doesn't exist
                 nameValid = true;
+            } else {
+                for (Task task: tasks) {
+                    if (task.getName().equals(name)) { //if the task name already exists, it enters the loop
+                        System.out.print("Task Name Already Exists, try again!");
+                        nameValid = false;
+                    } else {
+                        nameValid = true;
+                    }
+                }
             }
         }
         return name;
@@ -344,7 +336,7 @@ public class PSS {
             writer.write("]");
             writer.close();//closes file to stop memory leak issues
 
-        } catch (Exception ex) {//if IO exception is thrown, stack trace is posted
+        } catch (IOException ex) {//if IO exception is thrown, stack trace is posted
             ex.getStackTrace();
         }
     }

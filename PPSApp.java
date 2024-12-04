@@ -34,32 +34,32 @@ public class PPSApp{
                         }
                         else if(taskType < 4){
                             name = pss.nameValidation("Enter task name:");
-                            /*
-                            System.out.println("Enter start time (HH:mm):");
-                            startTime = scanner.nextLine();
-                            */
 
-                            startTime = timeValidator.hourValidator("Enter start time (HH.mm):");
+                            startTime = timeValidator.hourValidator("Enter start time (HH:mm):");
 
-                            duration = timeValidator.durationValidator("Enter duration (HH:mm):");
+                            duration = timeValidator.durationValidator("Enter duration (HH.mm):");
                             
                         // recurring tasks
                             if (taskType == 1) {
                                 System.out.println("\n[1] Class\n[2] Study\n[3] Sleep\n[4] Exercise\n[5] Work\n[6] Meal\nEnter task category: ");
                                 typeNum = Integer.parseInt(scanner.nextLine()); //test
                                 if(typeNum < 7 && typeNum > 0){
-                                    /*
-                                    System.out.println("Enter start date (YYYY-MM-DD):");
-                                    String startDate = scanner.nextLine();
-                                     */
-                                    String startDate = timeValidator.dateValidator("Enter start date (YYYY-MM-DD):");
+                                    boolean isStartBeforeEnd = false;
+                                    String startDate = "";
+                                    String endDate = "";
+                                    while (!isStartBeforeEnd) {
+                                        startDate = timeValidator.dateValidator("Enter start date (YYYY-MM-DD):");
+                                        endDate = timeValidator.dateValidator("Enter end date (YYYY-MM-DD):");
 
-                                    /*
-                                    System.out.println("Enter end date (YYYY-MM-DD):");
-                                    String endDate = scanner.nextLine();
-                                     */
-                                    String endDate = timeValidator.dateValidator("Enter end date (YYYY-MM-DD):");
-
+                                        int startBeforeEnd = timeValidator.dateOverlap(startDate, endDate);//validates the start and end times
+                                        if (startBeforeEnd == 1) {//check to see if the end date equals the start date
+                                            System.out.print("Error: End Date is before Start Date. Please try again\n");
+                                        } else if (startBeforeEnd == 2) {
+                                            System.out.print("Error: End Date equals Start Date. Please try again\n");
+                                        } else if (startBeforeEnd == 0) {
+                                            isStartBeforeEnd = true;
+                                        }
+                                    }
                                     id = pss.generateUniqueId(); // Generate unique ID for the task
                                     pss.addTask(new RecurringTask(id, name, startTime, pss.getType("recurring", typeNum), duration, startDate, endDate)); // Add recurring task
                                 }
@@ -74,10 +74,7 @@ public class PPSApp{
                                 System.out.println("\n[1] Visit\n[2] Shopping\n[3] Appointment\nEnter task category:");
                                 typeNum = Integer.parseInt(scanner.nextLine());
                                 if(typeNum < 4 && typeNum > 0){
-                                    /*
-                                    System.out.println("Enter date (YYYY-MM-DD):");
-                                    String date = scanner.nextLine();
-                                    */
+
                                     String date = timeValidator.dateValidator("Enter date (YYYY-MM-DD):");
                                     id = pss.generateUniqueId(); // Generate unique ID for the task
                                     pss.addTask(new TransientTask(id, name, startTime, pss.getType("transient", typeNum), duration, date)); // Add transient task
@@ -134,7 +131,7 @@ public class PPSApp{
                     break;
 
                 case 5: //search
-                    System.out.println("Enter task ID to search:");
+                    System.out.println("Enter task ID or task name to search:");
                     String searchId = scanner.nextLine();
                     pss.searchTask(searchId); // Search for task by ID
                     break;
