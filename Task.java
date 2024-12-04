@@ -4,11 +4,11 @@ abstract class Task {
     String name; // Name of the task
     String startTime; // Start time of the task in HH:mm format
     String type; // the type/category of the task
-    int duration; // Duration of the task in minutes
+    double duration; // Duration of the task in minutes
 
 
     // Constructor to initialize task properties
-    public Task(String id, String name, String startTime, String type, int duration) {
+    public Task(String id, String name, String startTime, String type, double duration) {
         this.id = id;
         this.name = name;
         this.startTime = startTime;
