@@ -1,3 +1,5 @@
+package com.mycompany.css;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -7,6 +9,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.File; 
 import java.io.FileNotFoundException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 
 // Enum for task types
@@ -23,6 +28,7 @@ public class PSS {
     private List<Task> tasks = new ArrayList<>(); // List to hold all tasks
     private Scanner scanner = new Scanner(System.in); // Scanner for user input
     private int taskCounter = 1; // Counter for generating unique IDs
+    
 
     // Method to generate a unique ID for tasks
     public String generateUniqueId() {
@@ -55,9 +61,20 @@ public class PSS {
                 System.out.println("Enter new name:");
                 String newName = nameValidation("Enter new task name:");
 
-                String newStartTime = timeValidator.hourValidator("Enter new start time (HH:mm):");
+                /*
+                System.out.println("Enter new start time (HH:mm):");
+                String newStartTime = scanner.nextLine();
 
-                double newDuration = timeValidator.durationValidator("Enter new duration (HH.mm):");
+                 */
+
+                String newStartTime = timeValidator.hourValidator("Enter new start time (HH.mm):");
+
+                /*/
+                System.out.println("Enter new duration (in minutes):");
+                int newDuration = Integer.parseInt(scanner.nextLine());
+
+                 */
+                double newDuration = timeValidator.durationValidator("Enter new duration (HH:mm):");
 
                 // Method when the task is a recurring task
                 if (task instanceof RecurringTask) {
@@ -65,22 +82,17 @@ public class PSS {
                     System.out.println("\n[1] Class\n[2] Study\n[3] Sleep\n[4] Exercise\n[5] Work\n[6] Meal\nEnter task category:");
                     typeNum = Integer.parseInt(scanner.nextLine());
 
-                    boolean isStartBeforeEnd = false;
-                    String newStartDate = "";
-                    String newEndDate = "";
-                    while (!isStartBeforeEnd) {
-                        newStartDate = timeValidator.dateValidator("Enter new start date (YYYY-MM-DD):");
-                        newEndDate = timeValidator.dateValidator("Enter new end date (YYYY-MM-DD):");
+                    /*
+                    System.out.println("Enter new start date (YYYY-MM-DD):");
+                    String newStartDate = scanner.nextLine();
+                    */
+                    String newStartDate = timeValidator.dateValidator("Enter new start date (YYYY-MM-DD):");
+                    /*
+                    System.out.println("Enter new end date (YYYY-MM-DD):");
+                    String newEndDate = scanner.nextLine();
 
-                        int startBeforeEnd = timeValidator.dateOverlap(newStartDate, newEndDate);//validates the start and end times
-                        if (startBeforeEnd == 1) {//check to see if the end date equals the start date
-                            System.out.print("Error: End Date is before Start Date. Please try again");
-                        } else if (startBeforeEnd == 2) {
-                            System.out.print("Error: End Date equals Start Date. Please try again");
-                        } else if (startBeforeEnd == 0) {
-                            isStartBeforeEnd = true;
-                        }
-                    }
+                     */
+                    String newEndDate = timeValidator.dateValidator("Enter new end date (YYYY-MM-DD):");
                     tasks.remove(task); // Remove old task
                     addTask(new RecurringTask(task.getId(), newName, newStartTime, getType("recurring", typeNum), newDuration, newStartDate, newEndDate )); // Add updated recurring task
                 } else {
@@ -88,7 +100,11 @@ public class PSS {
                     if (task instanceof TransientTask) {
                         System.out.println("\n[1] Visit\n[2] Shopping\n[3] Appointment\nEnter task category:");
                         typeNum = Integer.parseInt(scanner.nextLine());
+                        /*
+                        System.out.println("Enter new date (YYYY-MM-DD):");
+                        String newDate = scanner.nextLine();
 
+                         */
                         String newDate = timeValidator.dateValidator("Enter new date (YYYY-MM-DD):");
 
                         addTask(new TransientTask(task.getId(), newName, newStartTime, getType("transient", typeNum), newDuration, newDate)); // Add updated transient task
@@ -104,23 +120,25 @@ public class PSS {
     }
 
     // Method to read and display all tasks
-    public void readTasks() {
+    public String readTasks() {
+        String strTasks = "";
         // No tasks to display
-        if (tasks.isEmpty()) {
-            System.out.println("No tasks available.");
+        if (strTasks.isEmpty()) {
+            strTasks += "No tasks available.";
         } else {
             for (Task task : tasks) {
                 // Constructing task details for display
-                String taskDetails = "Task ID: " + task.getId() + ", Name: " + task.getName() + ", Type: " + task.getType() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
+                strTasks += "Task ID: " + task.getId() + ", Name: " + task.getName() + ", Type: " + task.getType() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
                 if (task instanceof TransientTask) {
-                    taskDetails += ", Date: " + ((TransientTask) task).date; // Add date for transient tasks
+                    strTasks += ", Date: " + ((TransientTask) task).date; // Add date for transient tasks
                 }
                 else if (task instanceof RecurringTask) {
-                    taskDetails += ", Start Date: " + ((RecurringTask) task).startDate + ", End Date: " + ((RecurringTask) task).endDate; // Add dates for recurring tasks
+                    strTasks += ", Start Date: " + ((RecurringTask) task).startDate + ", End Date: " + ((RecurringTask) task).endDate; // Add dates for recurring tasks
                 }
-                System.out.println(taskDetails); // Display task details
+                strTasks += "\n"; // Display task details
             }
         }
+        return strTasks;
     }
 
     // returns the task category/type when given the corresponding number
@@ -230,9 +248,9 @@ public class PSS {
     }
 
     // Method to search for a task by ID
-    public void searchTask(String identification) {
+    public void searchTask(String id) {
         for (Task task : tasks) {
-            if (task.getId().equals(identification) || task.getName().equals(identification)) {
+            if (task.getId().equals(id)) {
                 // Constructing task details for display
                 String taskDetails = "Found Task: ID: " + task.getId() + ", Name: " + task.getName() + ", Start Time: " + task.startTime + ", Duration: " + task.duration + " minutes, Type: " + task.getTaskType();
                 if (task instanceof TransientTask) {
@@ -248,47 +266,105 @@ public class PSS {
         System.out.println("Task not found."); // If task ID does not match
     }
 
-    public void showSchedule(){
-        String jsonFormat; //used to recreate JSON structure
+    public String showScheduleDay(String startDate){
+        String daySchedule = "";
+        String jsonFormat = ""; //used to recreate JSON structure
         String taskType; //used to store task type
         for (Task task: tasks) {
             taskType = String.valueOf(task.getType());
-
             //use string format to format JSON output
-            if (task instanceof RecurringTask) { //need frequency
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
-                        task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+            if (task instanceof RecurringTask) {
+                if (isWithinDays(startDate, ((RecurringTask)task).startDate, 1)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
+                            task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+                }
             } else if (task instanceof TransientTask) {
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
-                        task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                if (isWithinDays(startDate, ((TransientTask)task).date, 1)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                            task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                }
             } else if (task instanceof AntiTask) { //need date function
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                if (isWithinDays(startDate, ((TransientTask)task).date, 1)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
                         task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
-            } else {
-                jsonFormat = "Error";
+                }
             }
-            System.out.print(jsonFormat);
+            daySchedule += jsonFormat;
         }
+        return daySchedule;
     }
 
+    public String showScheduleWeek(String startDate){
+        String weekSchedule = "";
+        String jsonFormat = ""; //used to recreate JSON structure
+        String taskType; //used to store task type
+        for (Task task: tasks) {
+            taskType = String.valueOf(task.getType());
+            //use string format to format JSON output
+            if (task instanceof RecurringTask) {
+                if (isWithinDays(startDate, ((RecurringTask)task).startDate, 7)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
+                            task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+                }
+            } else if (task instanceof TransientTask) {
+                if (isWithinDays(startDate, ((TransientTask)task).date, 7)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                            task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                }
+            } else if (task instanceof AntiTask) { //need date function
+                if (isWithinDays(startDate, ((TransientTask)task).date, 7)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                        task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
+                }
+            }
+            weekSchedule += jsonFormat;
+        }
+        return weekSchedule;
+    }
+    
+    public String showScheduleMonth(String startDate){
+        String monthSchedule = "";
+        String jsonFormat = ""; //used to recreate JSON structure
+        String taskType; //used to store task type
+        for (Task task: tasks) {
+            taskType = String.valueOf(task.getType());
+            //use string format to format JSON output
+            if (task instanceof RecurringTask) {
+                if (isWithinDays(startDate, ((RecurringTask)task).startDate, 31)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
+                            task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+                }
+            } else if (task instanceof TransientTask) {
+                if (isWithinDays(startDate, ((TransientTask)task).date, 31)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                            task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                }
+            } else if (task instanceof AntiTask) { //need date function
+                if (isWithinDays(startDate, ((TransientTask)task).date, 31)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                        task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
+                }
+            }
+            monthSchedule += jsonFormat;
+        }
+        return monthSchedule;
+    }
     public String nameValidation (String promptUser) {
         boolean nameValid = false; //used to break from while loop
         String name = "";
         while (!nameValid) {
             System.out.print(promptUser);
             name = scanner.nextLine();
-
-            if (tasks.size() == 0) { //when zero tasks are initialized, the for loop doesn't exist
-                nameValid = true;
-            } else {
-                for (Task task: tasks) {
-                    if (task.getName().equals(name)) { //if the task name already exists, it enters the loop
-                        System.out.print("Task Name Already Exists, try again!");
-                        nameValid = false;
-                    } else {
-                        nameValid = true;
-                    }
+            for (Task task: tasks) {
+                if (task.getName().equals(name)) { //if the task name already exists, it enters the loop
+                    System.out.print("Task Name Already Exists, try again!");
+                    nameValid = false;
+                } else {
+                    nameValid=true;
                 }
+            }
+            if (tasks.size() == 0) {
+                nameValid = true;
             }
         }
         return name;
@@ -336,8 +412,22 @@ public class PSS {
             writer.write("]");
             writer.close();//closes file to stop memory leak issues
 
-        } catch (IOException ex) {//if IO exception is thrown, stack trace is posted
+        } catch (Exception ex) {//if IO exception is thrown, stack trace is posted
             ex.getStackTrace();
         }
     }
+    
+    public static boolean isWithinDays(String date1, String date2, int days) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        LocalDate firstDate = LocalDate.parse(date1, formatter);
+        LocalDate secondDate = LocalDate.parse(date2, formatter);
+
+        long daysDifference = ChronoUnit.DAYS.between(firstDate, secondDate);
+
+        // Check if the difference is within the allowed range
+        return Math.abs(daysDifference) <= days;
+    }
+    
+
 }
