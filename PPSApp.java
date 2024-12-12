@@ -145,7 +145,29 @@ public class PPSApp{
                 case 6: //write to File
                     System.out.print("Enter file name (no file type needed):");
                     String fileName = scanner.nextLine();
-                    pss.writeToFile(fileName);
+                    String writePeriod;
+                    String writeStartDate;
+                    boolean isWriteTrue = false;
+                    while (!isWriteTrue) {
+                        System.out.print("Do you want to write a day, week, or month to a file:");
+                        writePeriod = scanner.nextLine().toLowerCase();
+                        writeStartDate = timeValidator.dateValidator("What is the start date for your write:"); //checks if the date inputted is valid
+                        switch (writePeriod) {
+                            case "day" -> {
+                                pss.writeToFile(fileName, writeStartDate, 1);
+                                isWriteTrue = true;
+                            }
+                            case "week" -> {
+                                pss.writeToFile(fileName, writeStartDate, 7);
+                                isWriteTrue = true;
+                            }
+                            case "month" -> {
+                                pss.writeToFile(fileName, writeStartDate, 31);
+                                isWriteTrue = true;
+                            }
+                            default -> System.out.print("The input received is not valid. Please try again");
+                        }
+                    }
                     System.out.print("File Written\n");
                     break;
 
