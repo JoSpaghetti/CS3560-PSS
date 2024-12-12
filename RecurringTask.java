@@ -6,7 +6,7 @@ class RecurringTask extends Task {
     // String[] recurringTaskTypes = {"Class", "Study", "Sleep", "Exercise", "Work", "Meal"};
 
     // Constructor to initialize recurring task properties
-    public RecurringTask(String id, String name, String startTime, String type, float duration, String startDate, String endDate, int frequency) {
+    public RecurringTask(String id, String name, String startTime, String type, double duration, String startDate, String endDate, int frequency) {
         super(id, name, startTime, type, duration);
         this.startDate = startDate;
         this.endDate = endDate;
