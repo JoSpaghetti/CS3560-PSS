@@ -356,39 +356,40 @@ public class PSS {
             FileWriter writer = new FileWriter(fileSource + ".json");
             String jsonFormat = ""; //used to recreate JSON structure
             String taskType; //used to store task type
+            String antiTaskDate;
             writer.write("[\n");
             int count = 0;
             for (Task task: tasks) {
-                taskType = String.valueOf(task.getType());
-
                 //use string format to format JSON output
-
                 if (task instanceof RecurringTask) { //need frequency
                     if (isWithinDays(startDate, ((RecurringTask) task).startDate, days)) {
-                        jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Start Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t\t\"End Date\": \"%s\", \n\t\t\"Frequency\": \"%s\" \n\t}",
-                                task.getId(), task.getName(), task.getType(), ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+                        jsonFormat = String.format("\t{\n \n\t\t\"Name\": \"%s\", \n\t\t\"Type\": \"%s\", \n\t\t\"Start Date\": \"%s\", \n\t\t\"End Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\",  \n\t\t\"Frequency\": \"%s\" \n\t}",
+                                task.getName(), task.getType(), ((RecurringTask) task).startDate, ((RecurringTask) task).endDate, task.startTime, task.duration,  ((RecurringTask) task).getFrequency());
                     }
                 }
                 else if (task instanceof TransientTask) {
                     if (isWithinDays(startDate, ((TransientTask) task).date, days)) {
-                        jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\" \n\t}",
-                                task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                        taskType = String.valueOf(task.getType());
+                        jsonFormat = String.format("\t{\n \n\t\t\"Name\": \"%s\", \n\t\t\"Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\" \n\t}",
+                                task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
                     }
                 }
                 else if (task instanceof AntiTask) { //need date function
                     if (isWithinDays(startDate, ((AntiTask) task).startTime, days)) {
-                        jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\" \n\t}",
-                                task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
+                        antiTaskDate = "";
+                        taskType = "Cancellation";
+                        jsonFormat = String.format("\t{\n \t\t\"Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"StartTime\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t\t\"Name\": \"%s\" \n\t}",
+                                taskType, antiTaskDate, task.startTime, task.duration, task.getName());
                     }
                 }
                 else {
                     jsonFormat = "Null";
                 }
-                //adds "," at the end of every json block
+
                 if (++count == tasks.size() ) {
-                    jsonFormat += "\n";
+                    jsonFormat += "\n"; //leaves the last json block w/o ","
                 } else {
-                    jsonFormat += ",\n";
+                    jsonFormat += ",\n"; //adds "," at the end of every json block
                 }
                 writer.write(jsonFormat);
             }
@@ -402,8 +403,8 @@ public class PSS {
     public static boolean isWithinDays(String date1, String date2, int days) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        LocalDate firstDate = LocalDate.parse(date1, formatter);
-        LocalDate secondDate = LocalDate.parse(date2, formatter);
+        LocalDate firstDate = LocalDate.parse(date1, formatter); //formats first date
+        LocalDate secondDate = LocalDate.parse(date2, formatter); //formats second date
 
         long daysDifference = ChronoUnit.DAYS.between(firstDate, secondDate);
 

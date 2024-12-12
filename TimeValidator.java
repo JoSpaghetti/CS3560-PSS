@@ -3,25 +3,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TimeValidator {
-    private Scanner scanner = new Scanner(System.in); // Scanner for user input
+    private final Scanner scanner = new Scanner(System.in); // Scanner for user input
     public String dateValidator (String promptUser) {
         boolean dateValid = false;
         String tempDate = "";
         while (!dateValid) {
-            System.out.print(promptUser);
+            System.out.print(promptUser); //sends prompt to users
             tempDate = scanner.nextLine();
 
-            if (!dateFormatValidator(tempDate)) {
+            if (!dateFormatValidator(tempDate)) { //date format is wrong
                 System.out.print("The date format inputted is wrong. Please try again \n");
-            } else if (!dateExistsValidator(tempDate)) {
+            } else if (!dateExistsValidator(tempDate)) { //date doesn't exist
                 System.out.print("The date inputted does not exist. Please try again \n");
             } else {
                 dateValid = true;
             }
 
         }
-        String date = tempDate;
-        return date;
+        //String date = tempDate;
+        return tempDate;
 
     }
     public double durationValidator (String promptUser) {
@@ -31,9 +31,9 @@ public class TimeValidator {
         while (!durationValid) {
             System.out.println(promptUser);
             tempDuration = scanner.nextLine();
-            if (!durationFormatValidator(tempDuration)) {
+            if (!durationFormatValidator(tempDuration)) { //duration isn't formatted correctly
                 System.out.print("The duration format is incorrect. Please try again \n");
-            } else if (!hourExistsValidator(tempDuration)) {
+            } else if (!hourExistsValidator(tempDuration)) { //curation doesn't exist
                 System.out.print("The duration inputted does not exist. Please try again \n");
             } else {
                 durationValid = true;
@@ -53,17 +53,17 @@ public class TimeValidator {
         while (!hourValid) {
             System.out.print(promptUser);
             tempHour = scanner.nextLine();
-            if (!hourFormatValidator(tempHour)) {
+            if (!hourFormatValidator(tempHour)) {//hour format is wrong
                 System.out.print("The hour format is incorrect. Please try again \n");
-            } else if (!hourExistsValidator(tempHour)) {
+            } else if (!hourExistsValidator(tempHour)) {//hour doesn't exist
                 System.out.print("The hour inputted does not exist. Please try again \n");
             } else {
                 hourValid = true;
             }
         }
 
-        String hour = hourIncrementer(tempHour, ':');
-        return hour;
+        //String hour = hourIncrementer(tempHour, ':');
+        return hourIncrementer(tempHour, ':');
     }
     private boolean dateFormatValidator (String date) { //checks for date format
         String dateRegex = "\\d{4}-\\d{2}-\\d{2}"; //regex code for date
@@ -91,13 +91,13 @@ public class TimeValidator {
         int year1 = intErrHandler (beforeDate.substring(0,4), "Year"); //turns the string into an int value
         int month1 = intErrHandler (beforeDate.substring(5,7), "Month");
         int day1 = intErrHandler (beforeDate.substring(8,10), "Day");
-        double tempDate1 = ((double)year1 * 10000) + ((double)month1 * 100) + (double)day1;//Double.parseDouble(String.valueOf(year1) + String.valueOf(month1) + String.valueOf(day1)); //creates a concatenation of the date
+        double tempDate1 = ((double)year1 * 10000) + ((double)month1 * 100) + (double)day1;//creates a concatenation of the date
 
         int year2 = intErrHandler (afterDate.substring(0,4), "Year");
         int month2 = intErrHandler (afterDate.substring(5,7), "Month");
         int day2 = intErrHandler (afterDate.substring(8,10), "Day");
         double tempDate2 = ((double)year2 * 10000) + ((double)month2 * 100) + (double)day2; //creates a concatenation of the date
-        System.out.println(year1 + " " + tempDate1 + " " + tempDate2 + " " + year2);
+        //System.out.println(year1 + " " + tempDate1 + " " + tempDate2 + " " + year2); //test for write function
 
         if (tempDate2 < tempDate1) {
             return 1;
@@ -123,24 +123,29 @@ public class TimeValidator {
          */
 
         switch (month) {
-            case 1,3,5,7,8,10,12: //Months with 31 days
-                if (day > 0 && day <= 31) { dateExists = true; }
-                break;
-
-            case 4,6,9,11: //Months with 30 days
-                if (day > 0 && day <= 30) { dateExists = true; }
-                break;
-
-            case 2: //February
-                if ((year & 3) == 0 && ((year %25) != 0 || (year & 15)==0)) { //leap year checker
-                    if (day > 0 && day <= 29) { dateExists = true; }
+            case 1, 3, 5, 7, 8, 10, 12 -> { //Months with 31 days
+                if (day > 0 && day <= 31) {
+                    dateExists = true;
                 }
-                else {
-                    if (day > 0 && day <= 28) { dateExists = true; } //non leap year checker
+            }
+            case 4, 6, 9, 11 -> { //Months with 30 days
+                if (day > 0 && day <= 30) {
+                    dateExists = true;
                 }
-                break;
-            default:
-                dateExists = false;
+            }
+            case 2 -> { //February
+                if ((year & 3) == 0 && ((year % 25) != 0 || (year & 15) == 0)) { //leap year checker
+                    if (day > 0 && day <= 29) {
+                        dateExists = true;
+                    }
+                } else {
+                    if (day > 0 && day <= 28) {
+                        dateExists = true;
+                    } //non leap year checker
+                }
+            }
+            default -> {
+            }
         }
         return dateExists;
     }
