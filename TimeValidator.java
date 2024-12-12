@@ -88,15 +88,16 @@ public class TimeValidator {
     }
 
     public int dateOverlap (String beforeDate, String afterDate) {
-        int year1 = intErrHandler (beforeDate.substring(0,3), "Year"); //turns the string into an int value
+        int year1 = intErrHandler (beforeDate.substring(0,4), "Year"); //turns the string into an int value
         int month1 = intErrHandler (beforeDate.substring(5,7), "Month");
         int day1 = intErrHandler (beforeDate.substring(8,10), "Day");
-        double tempDate1 = Double.parseDouble(String.valueOf(year1) + String.valueOf(month1) + String.valueOf(day1)); //creates a concatenation of the date
+        double tempDate1 = ((double)year1 * 10000) + ((double)month1 * 100) + (double)day1;//Double.parseDouble(String.valueOf(year1) + String.valueOf(month1) + String.valueOf(day1)); //creates a concatenation of the date
 
-        int year2 = intErrHandler (afterDate.substring(0,3), "Year");
+        int year2 = intErrHandler (afterDate.substring(0,4), "Year");
         int month2 = intErrHandler (afterDate.substring(5,7), "Month");
         int day2 = intErrHandler (afterDate.substring(8,10), "Day");
-        double tempDate2 = Double.parseDouble(String.valueOf(year2) + String.valueOf(month2) + String.valueOf(day2)); //creates a concatenation of the date
+        double tempDate2 = ((double)year2 * 10000) + ((double)month2 * 100) + (double)day2; //creates a concatenation of the date
+        System.out.println(year1 + " " + tempDate1 + " " + tempDate2 + " " + year2);
 
         if (tempDate2 < tempDate1) {
             return 1;
