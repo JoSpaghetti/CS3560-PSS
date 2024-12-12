@@ -1,14 +1,13 @@
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.File; 
 import java.io.FileNotFoundException;
-import java.io.BufferedWriter;
 
 
 
@@ -20,6 +19,7 @@ enum TaskType {
 // Main scheduling tool
 public class PSS {
 
+    // arrays containing the types/categories for each task (they are all independent)
     String[] recurringTaskTypes = {"Class", "Study", "Sleep", "Exercise", "Work", "Meal"};
     String[] transientTaskTypes = {"Visit", "Shopping", "Appointment"};
     String[] antiTaskTypes = {"Cancellation"};
@@ -71,8 +71,10 @@ public class PSS {
                     String newStartDate = scanner.nextLine();
                     System.out.println("Enter new end date (YYYY-MM-DD):");
                     String newEndDate = scanner.nextLine();
+                    System.out.println("\n[1] daily\n[7] weekly\nEnter new frequency: ");
+                    int newFrequency = Integer.parseInt(scanner.nextLine());
                     tasks.remove(task); // Remove old task
-                    addTask(new RecurringTask(task.getId(), newName, newStartTime, getType("recurring", typeNum), newDuration, newStartDate, newEndDate )); // Add updated recurring task
+                    addTask(new RecurringTask(task.getId(), newName, newStartTime, getType("recurring", typeNum), newDuration, newStartDate, newEndDate, newFrequency )); // Add updated recurring task
                 } else {
                     tasks.remove(task); // Remove old task
                     if (task instanceof TransientTask) {
@@ -129,6 +131,19 @@ public class PSS {
     // creates tasks from a file
     // work in progress
     public void readFromFile(String fileName){
+
+        String taskName = null;
+        String taskType = null;
+        String date = null;
+        String startTime = null;
+        float duration = -1;
+        String startDate = null;
+        String endDate = null;
+        int frequency = -1;
+
+        // list of ids to keep track of all tasks added from this file
+        List<String> taskIDs = new ArrayList<>();
+
         // try catch to make sure the file exists
         try{
             // intialize the file
@@ -136,41 +151,84 @@ public class PSS {
             File inputFile = new File(name);
             Scanner reader = new Scanner(inputFile);
 
-            // pull all the info from the JSON file
+            // build a string with all the JSON content
             StringBuilder jsonContent = new StringBuilder();
             while (reader.hasNextLine()) {
                 jsonContent.append(reader.nextLine());
             }
+            // prevent data leaks
+            reader.close(); 
 
-            // creates the patterns to parse the key value pair correctly
-            String regex = "\"(.*?)\"\\s*:\\s*(\"(.*?)\"|\\d+|true|false|null)";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(jsonContent.toString());
+            String objectRegex = "\\{([^}]*)\\}";  // Match content inside {}
+            String keyValueRegex = "\"(.*?)\"\\s*:\\s*(?:\"(.*?)\"|([^,{}]+))";  // Match key-value pairs
 
-            //String tempid;
-            String taskName;
-            String curTaskType;
-            String startTime;
-            int duration;
-            String startDate;
-            String endDate;
-            String frequency;
+            Pattern objectPattern = Pattern.compile(objectRegex);
+            Matcher objectMatcher = objectPattern.matcher(jsonContent);
 
-        // FIX DURATION LATER (NEEDS TO BE FLOAT POINT)
-            while (matcher.find()) {
-                //String taskName = matcher.group(1);
-                taskName = matcher.group(2);
-                matcher.find();
-                curTaskType = matcher.group(2).trim();
+            // parse through the string and find corresponding key value pairs
+            while (objectMatcher.find()) {
+                String objectContent = objectMatcher.group(1);  // Extract the content inside {}
+    
+                // Now, find key-value pairs within the object
+                Pattern keyValuePattern = Pattern.compile(keyValueRegex);
+                Matcher keyValueMatcher = keyValuePattern.matcher(objectContent);
+    
+                // Print out key-value pairs for this object
+                while (keyValueMatcher.find()) {
+                    String key = keyValueMatcher.group(1);
+                    String value = keyValueMatcher.group(2);
+                    if (value == null && keyValueMatcher.groupCount() >= 3) {
+                        value = keyValueMatcher.group(3); // For non-quoted values like numbers or booleans
+                    }
+                    //System.out.println("Key: " + key + ", Value: " + value); // test print statement
+                    
+                    // remove trailing white spaces
+                    value = value.trim();
 
-            // check which type of task it is using the task types
-                if(curTaskType.matches(".*Cancellation.*")){
-                    matcher.find();
-                    startDate = matcher.group(2);
-                    matcher.find();
-                    startTime = matcher.group(2);
-                    matcher.find();
-                    duration = Integer.parseInt(matcher.group(2));
+                    switch (key) {
+                        case "Name":
+                            taskName = value;
+                            break;
+
+                        case "Type":
+                            taskType = value;
+                            break;
+
+                        case "Date":
+                            date = value;
+                            break;
+
+                        case "StartDate":
+                            startDate = value;
+                            break;
+                        
+                        case "StartTime":
+                            startTime = value;
+                            break;
+
+                        case "Duration":
+                            duration = Float.parseFloat(value);
+                            break;
+
+                        case "EndDate":
+                            endDate = value;
+                            break;
+
+                        case "Frequency":
+                            frequency = Integer.parseInt(value);
+                            break;
+                    
+                        default:
+                            break;
+                    }
+                }
+                //System.out.println("-----");  // testing print statement
+
+                // antitask
+                if(taskType.equals("Cancellation")){
+                    if(taskName == null || startTime == null || duration <= 0){
+                        throw new Exception("Incorrect format.");
+                    }
             // FIX LATER // MAKE ANTITASK FIND RECURRING TASK BASED ON TIME & DATE
                     RecurringTask recurringTask = null;
                     for (Task task : tasks) {
@@ -179,44 +237,51 @@ public class PSS {
                             break;
                         }
                     }
-                    addTask(new AntiTask(generateUniqueId(), taskName, startTime, "Cancelation", duration, recurringTask));
+                    String tempID = generateUniqueId();
+                    addTask(new AntiTask(tempID, taskName, startTime, "Cancelation", duration, recurringTask));
+                    taskIDs.add(tempID);
                 } 
-                else if(curTaskType.matches(".*Visit.*") || curTaskType.matches(".*Shopping.*") || curTaskType.matches(".*Appointment.*")){
-                    matcher.find();
-                    startDate = matcher.group(2);
-                    matcher.find();
-                    startTime = matcher.group(2);
-                    matcher.find();
-                    duration = Integer.parseInt(matcher.group(2));
-                    addTask(new TransientTask(generateUniqueId(), taskName, startTime, curTaskType, duration, startDate));
+
+                // transient task
+                else if(taskType.equals("Visit") || taskType.equals("Shopping") || taskType.equals("Appointment")){
+                    if(taskName == null || startTime == null || duration <= 0 || date == null || taskType == null){
+                        throw new Exception("Incorrect format.");
+                    }
+
+                    String tempID = generateUniqueId();
+                    addTask(new TransientTask(tempID, taskName, startTime, taskType, duration, date));
+                    taskIDs.add(tempID);
                 } 
+
+                // recurring task
                 else{
+                    if(taskName == null || startTime == null || duration <= 0 || taskType == null || startDate == null || endDate == null || frequency <= 0){
+                        throw new Exception("Incorrect format.");
+                    }
+
                     for (int i = 0; i < recurringTaskTypes.length; i++) {
-                        if (recurringTaskTypes[i].equals(curTaskType)) {
+                        if (recurringTaskTypes[i].equals(taskType)) {
                             break;
                         }
                     }
-                    matcher.find();
-                    startDate = matcher.group(2);
-                    matcher.find();
-                    startTime = matcher.group(2);
-                    matcher.find();
-                    duration = Integer.parseInt(matcher.group(2));
-                    matcher.find();
-                    endDate = matcher.group(2);
-                    matcher.find();
-                    frequency = matcher.group(2);
-                    addTask(new RecurringTask(generateUniqueId(), taskName, startTime, curTaskType, duration, startDate, endDate));
+                    String tempID = generateUniqueId();
+                    addTask(new RecurringTask(tempID, taskName, startTime, taskType, duration, startDate, endDate, frequency));
+                    taskIDs.add(tempID);
                 }
-                //readTasks();
             }
 
-            reader.close(); 
-
+        // error handling
         } catch (FileNotFoundException e) {
             System.out.println("Couldn't find a file of that name, please try again.");
+        } catch (Exception e){
+            // removes all tasks that were added because the file had some sort of incorrect formatting
+            for(int i = 0; i < taskIDs.size(); i++){
+                removeTask(taskIDs.get(i));
+            }
+            System.out.println(e + " No tasks were added, please try again.");
         }
     }
+
 
     // Method to search for a task by ID
     public void searchTask(String id) {
