@@ -411,4 +411,45 @@ public class PSS {
         // Check if the difference is within the allowed range
         return Math.abs(daysDifference) <= days;
     }
+    // Method to remove a task by ID, including related anti-tasks if applicable
+public void removeTask(String id) {
+    Task toRemove = tasks.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
+    if (toRemove instanceof RecurringTask) {
+        // Remove all associated anti-tasks
+        tasks.removeIf(t -> t instanceof AntiTask && ((AntiTask) t).recurringTask.getId().equals(id));
+    }
+    if (toRemove != null) {
+        tasks.remove(toRemove);
+        System.out.println("Task removed with ID: " + id);
+    } else {
+        System.out.println("Task not found.");
+    }
+}
+// Method to check for conflicts when deleting an anti-task
+public void checkConflictsOnAntiTaskDeletion(String antiTaskId) {
+    AntiTask antiTask = (AntiTask) tasks.stream()
+        .filter(t -> t.getId().equals(antiTaskId) && t instanceof AntiTask)
+        .findFirst()
+        .orElse(null);
+    
+    if (antiTask != null) {
+        // Assume the method isOverlapping() checks for any overlaps in the schedule
+        boolean conflictExists = isOverlapping(antiTask.recurringTask);
+        if (conflictExists) {
+            System.out.println("Warning: Removing this anti-task will cause scheduling conflicts.");
+        }
+        tasks.remove(antiTask);
+        System.out.println("Anti-task removed with ID: " + antiTaskId);
+    } else {
+        System.out.println("Anti-task not found.");
+    }
+}
+
+// You might need to implement or adjust the isOverlapping method based on actual overlap checking logic
+public boolean isOverlapping(RecurringTask task) {
+    // Implement overlap checking logic here
+    return false; // Placeholder return
+}
+
+
 }
