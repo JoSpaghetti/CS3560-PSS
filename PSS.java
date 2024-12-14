@@ -37,11 +37,17 @@ public class PSS {
         return tasks;
     }
 
-    // Method to add a task to the list
-    public void addTask(Task task) {
-        tasks.add(task);
-        System.out.println("Task added: " + task.getName() + " with ID: " + task.getId());
+  // Modify the addTask method to check for overlaps before adding a task
+public void addTask(Task task) {
+    for (Task existingTask : tasks) {
+        if (isOverlapping(task, existingTask)) {
+            System.out.println("Error: Task overlaps with existing task " + existingTask.getName());
+            return; // Prevent adding the task
+        }
     }
+    tasks.add(task);
+    System.out.println("Task added successfully: " + task.getName());
+}
 
     // Method to remove a task by ID
     public void removeTask(String id) {
@@ -445,10 +451,20 @@ public void checkConflictsOnAntiTaskDeletion(String antiTaskId) {
     }
 }
 
-// You might need to implement or adjust the isOverlapping method based on actual overlap checking logic
-public boolean isOverlapping(RecurringTask task) {
-    // Implement overlap checking logic here
-    return false; // Placeholder return
+// Method to check if two tasks overlap
+public boolean isOverlapping(Task task1, Task task2) {
+    if (task1 instanceof RecurringTask && task2 instanceof TransientTask || task1 instanceof TransientTask && task2 instanceof RecurringTask) {
+        // Convert task start times and durations to Date objects or similar to compare
+        LocalDate task1Start = LocalDate.parse(((RecurringTask) task1).getStartDate());
+        LocalDate task1End = LocalDate.parse(((RecurringTask) task1).getEndDate());
+        LocalDate task2Date = LocalDate.parse(((TransientTask) task2).date);
+
+        // Check if the transient task date falls between the start and end dates of the recurring task
+        if ((task2Date.isEqual(task1Start) || task2Date.isAfter(task1Start)) && (task2Date.isBefore(task1End) || task2Date.isEqual(task1End))) {
+            return true; // There is an overlap
+        }
+    }
+    return false; // No overlap
 }
 
 
