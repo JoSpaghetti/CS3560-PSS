@@ -305,27 +305,33 @@ public class PSS {
         System.out.println("Task not found."); // If task ID does not match
     }
 
-    public void showSchedule(){
-        String jsonFormat; //used to recreate JSON structure
+    public void showSchedule(String startDate, int numDays){
+        StringBuilder schedule = new StringBuilder();
+        String scheduleOutput = ""; //
         String taskType; //used to store task type
         for (Task task: tasks) {
+            scheduleOutput = "";
             taskType = String.valueOf(task.getType());
-
             //use string format to format JSON output
-            if (task instanceof RecurringTask) { //need frequency
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
-                        task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+            if (task instanceof RecurringTask) {
+                if (isWithinDays(startDate, ((RecurringTask)task).startDate, numDays)) {
+                    scheduleOutput = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
+                            task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+                }
             } else if (task instanceof TransientTask) {
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
-                        task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                if (isWithinDays(startDate, ((TransientTask)task).date, numDays)) {
+                    scheduleOutput = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                            task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                }
             } else if (task instanceof AntiTask) { //need date function
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
-                        task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
-            } else {
-                jsonFormat = "Error";
+                if (isWithinDays(startDate, ((AntiTask)task).date, numDays)) {
+                    scheduleOutput = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                            task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
+                }
             }
-            System.out.print(jsonFormat);
+            schedule.append(scheduleOutput);
         }
+        System.out.print(schedule);
     }
 
     public String nameValidation (String promptUser) {
@@ -375,8 +381,8 @@ public class PSS {
                     }
                 }
                 else if (task instanceof AntiTask) { //need date function
-                    if (isWithinDays(startDate, ((AntiTask) task).startTime, days)) {
-                        antiTaskDate = "";
+                    if (isWithinDays(startDate, ((AntiTask) task).date, days)) {
+                        antiTaskDate = ((AntiTask) task).date;
                         taskType = "Cancellation";
                         jsonFormat = String.format("\t{\n \t\t\"Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"StartTime\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t\t\"Name\": \"%s\" \n\t}",
                                 taskType, antiTaskDate, task.startTime, task.duration, task.getName());
