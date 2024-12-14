@@ -1,12 +1,18 @@
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.File; 
 import java.io.FileNotFoundException;
+
+import static java.time.LocalDate.parse;
 
 
 // Enum for task types
@@ -33,17 +39,24 @@ public class PSS {
         return tasks;
     }
 
-    // Method to add a task to the list
-    public void addTask(Task task) {
-        tasks.add(task);
-        System.out.println("Task added: " + task.getName() + " with ID: " + task.getId());
+  // Modify the addTask method to check for overlaps before adding a task
+public void addTask(Task task) {
+    for (Task existingTask : tasks) {
+        if (!isOverlapping((Task) task)) {
+            continue;
+        }
+        System.out.println("Error: Task overlaps with existing task " + existingTask.getName());
+        return; // Prevent adding the task
     }
+    tasks.add(task);
+    System.out.println("Task added successfully: " + task.getName());
+}
 
     // Method to remove a task by ID
-    public void removeTask(String id) {
-        tasks.removeIf(task -> task.getId().equals(id));
-        System.out.println("Task removed with ID: " + id);
-    }
+//    public void removeTask(String id) {
+//        tasks.removeIf(task -> task.getId().equals(id));
+//        System.out.println("Task removed with ID: " + id);
+//    }
 
     // Method to edit an existing task
     public void editTask(String id) {
@@ -195,43 +208,30 @@ public class PSS {
                     //System.out.println("Key: " + key + ", Value: " + value); // test print statement
                     
                     // remove trailing white spaces
-                    value = value.trim();
+                    if (!Objects.equals(value, null)) {
+                        value = value.trim();
+                    }
+
 
                     switch (key) {
-                        case "Name":
-                            taskName = value;
-                            break;
-
-                        case "Type":
-                            taskType = value;
-                            break;
-
-                        case "Date":
-                            date = value;
-                            break;
-
-                        case "StartDate":
-                            startDate = value;
-                            break;
-                        
-                        case "StartTime":
-                            startTime = value;
-                            break;
-
-                        case "Duration":
-                            duration = Float.parseFloat(value);
-                            break;
-
-                        case "EndDate":
-                            endDate = value;
-                            break;
-
-                        case "Frequency":
-                            frequency = Integer.parseInt(value);
-                            break;
-                    
-                        default:
-                            break;
+                        case "Name" -> taskName = value;
+                        case "Type" -> taskType = value;
+                        case "Date" -> date = value;
+                        case "StartDate" -> startDate = value;
+                        case "StartTime" -> startTime = value;
+                        case "Duration" -> {
+                            if (value != null) {
+                                duration = Float.parseFloat(value);
+                            }
+                        }
+                        case "EndDate" -> endDate = value;
+                        case "Frequency" -> {
+                            if (value != null) {
+                                frequency = Integer.parseInt(value);
+                            }
+                        }
+                        default -> {
+                        }
                     }
                 }
                 //System.out.println("-----");  // testing print statement
@@ -256,7 +256,7 @@ public class PSS {
 
                 // transient task
                 else if(taskType.equals("Visit") || taskType.equals("Shopping") || taskType.equals("Appointment")){
-                    if(taskName == null || startTime == null || duration <= 0 || date == null || taskType == null){
+                    if(taskName == null || startTime == null || duration <= 0 || date == null ){
                         throw new Exception("Incorrect format.");
                     }
 
@@ -267,12 +267,12 @@ public class PSS {
 
                 // recurring task
                 else{
-                    if(taskName == null || startTime == null || duration <= 0 || taskType == null || startDate == null || endDate == null || frequency <= 0){
+                    if (taskName == null || startTime == null || duration <= 0 || taskType == null ||startDate == null || endDate == null || frequency <= 0){
                         throw new Exception("Incorrect format.");
                     }
 
-                    for (int i = 0; i < recurringTaskTypes.length; i++) {
-                        if (recurringTaskTypes[i].equals(taskType)) {
+                    for (String recurringTaskType : recurringTaskTypes) {
+                        if (recurringTaskType.equals(taskType)) {
                             break;
                         }
                     }
@@ -287,8 +287,8 @@ public class PSS {
             System.out.println("Couldn't find a file of that name, please try again.");
         } catch (Exception e){
             // removes all tasks that were added because the file had some sort of incorrect formatting
-            for(int i = 0; i < taskIDs.size(); i++){
-                removeTask(taskIDs.get(i));
+            for (String taskID : taskIDs) {
+                removeTask(taskID);
             }
             System.out.println(e + " No tasks were added, please try again.");
         }
@@ -314,27 +314,33 @@ public class PSS {
         System.out.println("Task not found."); // If task ID does not match
     }
 
-    public void showSchedule(){
-        String jsonFormat; //used to recreate JSON structure
+    public void showSchedule(String startDate, int numDays){
+        String schedule = "";
+        String jsonFormat = ""; //used to recreate JSON structure
         String taskType; //used to store task type
         for (Task task: tasks) {
+            jsonFormat = "";
             taskType = String.valueOf(task.getType());
-
             //use string format to format JSON output
-            if (task instanceof RecurringTask) { //need frequency
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
-                        task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+            if (task instanceof RecurringTask) {
+                if (isWithinDays(startDate, ((RecurringTask)task).startDate, numDays)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
+                            task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+                }
             } else if (task instanceof TransientTask) {
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
-                        task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                if (isWithinDays(startDate, ((TransientTask)task).date, numDays)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                            task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                }
             } else if (task instanceof AntiTask) { //need date function
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                if (isWithinDays(startDate, ((AntiTask)task).date, numDays)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
                         task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
-            } else {
-                jsonFormat = "Error";
+                }
             }
-            System.out.print(jsonFormat);
+            schedule += jsonFormat;
         }
+        System.out.print(schedule);
     }
 
     public String nameValidation (String promptUser) {
@@ -359,43 +365,46 @@ public class PSS {
         }
         return name;
     }
-    /*
-    public dateOverlapValidator() {
 
-    }
-    */
-
-    public void writeToFile (String fileSource) throws IOException {
+    public void writeToFile (String fileSource, String startDate, int days) throws IOException {
         try {
             FileWriter writer = new FileWriter(fileSource + ".json");
-            String jsonFormat; //used to recreate JSON structure
+            String jsonFormat = ""; //used to recreate JSON structure
             String taskType; //used to store task type
+            String antiTaskDate;
             writer.write("[\n");
             int count = 0;
             for (Task task: tasks) {
-                taskType = String.valueOf(task.getType());
-
                 //use string format to format JSON output
                 if (task instanceof RecurringTask) { //need frequency
-                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Start Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t\t\"End Date\": \"%s\", \n\t\t\"Frequency\": \"%s\" \n\t}",
-                            task.getId(),task.getName(),task.getType(), ((RecurringTask) task).startDate, task.startTime,task.duration, ((RecurringTask) task).endDate, task.startTime );
+                    if (isWithinDays(startDate, ((RecurringTask) task).startDate, days)) {
+                        jsonFormat = String.format("\t{\n \n\t\t\"Name\": \"%s\", \n\t\t\"Type\": \"%s\", \n\t\t\"Start Date\": \"%s\", \n\t\t\"End Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\",  \n\t\t\"Frequency\": \"%s\" \n\t}",
+                                task.getName(), task.getType(), ((RecurringTask) task).startDate, ((RecurringTask) task).endDate, task.startTime, task.duration,  ((RecurringTask) task).getFrequency());
+                    }
                 }
                 else if (task instanceof TransientTask) {
-                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\" \n\t}",
-                            task.getId(),task.getName(),taskType,((TransientTask) task).date, task.startTime, task.duration);
+                    if (isWithinDays(startDate, ((TransientTask) task).date, days)) {
+                        taskType = String.valueOf(task.getType());
+                        jsonFormat = String.format("\t{\n \n\t\t\"Name\": \"%s\", \n\t\t\"Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\" \n\t}",
+                                task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                    }
                 }
                 else if (task instanceof AntiTask) { //need date function
-                    jsonFormat = String.format("\t{\n \t\t\"ID\": \"%s\", \n\t\t\"Name\": \"%s\", \n\t\t\"Task Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"Start Time\": \"%s\", \n\t\t\"Duration\": \"%s\" \n\t}",
-                            task.getId(),task.getName(),taskType, task.duration, task.startTime,task.duration );
+                    if (isWithinDays(startDate, ((AntiTask) task).startTime, days)) {
+                        antiTaskDate = "";
+                        taskType = "Cancellation";
+                        jsonFormat = String.format("\t{\n \t\t\"Type\": \"%s\", \n\t\t\"Date\": \"%s\", \n\t\t\"StartTime\": \"%s\", \n\t\t\"Duration\": \"%s\", \n\t\t\"Name\": \"%s\" \n\t}",
+                                taskType, antiTaskDate, task.startTime, task.duration, task.getName());
+                    }
                 }
                 else {
                     jsonFormat = "Null";
                 }
-                //adds "," at the end of every json block
+
                 if (++count == tasks.size() ) {
-                    jsonFormat += "\n";
+                    jsonFormat += "\n"; //leaves the last json block w/o ","
                 } else {
-                    jsonFormat += ",\n";
+                    jsonFormat += ",\n"; //adds "," at the end of every json block
                 }
                 writer.write(jsonFormat);
             }
@@ -405,5 +414,67 @@ public class PSS {
         } catch (IOException ex) {//if IO exception is thrown, stack trace is posted
             ex.getStackTrace();
         }
+    }
+    public static boolean isWithinDays(String date1, String date2, int days) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        LocalDate firstDate = parse(date1, formatter); //formats first date
+        LocalDate secondDate = parse(date2, formatter); //formats second date
+
+        long daysDifference = ChronoUnit.DAYS.between(firstDate, secondDate);
+
+        // Check if the difference is within the allowed range
+        return Math.abs(daysDifference) <= days;
+    }
+    
+    // Method to remove a task by ID, including related anti-tasks if applicable
+    public void removeTask(String id) {
+        Task toRemove = tasks.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
+        if (toRemove instanceof RecurringTask) {
+            // Remove all associated anti-tasks
+            tasks.removeIf(t -> t instanceof AntiTask && ((AntiTask) t).recurringTask.getId().equals(id));
+        }
+        if (toRemove != null) {
+            tasks.remove(toRemove);
+            System.out.println("Task removed with ID: " + id);
+        } else {
+            System.out.println("Task not found.");
+        }
+    }
+    // Method to check for conflicts when deleting an anti-task
+    public void checkConflictsOnAntiTaskDeletion(String antiTaskId) {
+        AntiTask antiTask = (AntiTask) tasks.stream()
+            .filter(t -> t.getId().equals(antiTaskId) && t instanceof AntiTask)
+            .findFirst()
+            .orElse(null);
+        
+        if (antiTask != null) {
+            // Assume the method isOverlapping() checks for any overlaps in the schedule
+            boolean conflictExists = isOverlapping(antiTask.recurringTask);
+            if (conflictExists) {
+                System.out.println("Warning: Removing this anti-task will cause scheduling conflicts.");
+            }
+            tasks.remove(antiTask);
+            System.out.println("Anti-task removed with ID: " + antiTaskId);
+        } else {
+            System.out.println("Anti-task not found.");
+        }
+    }
+
+    // Method to check if two tasks overlap
+    public boolean isOverlapping(Task task1) {
+        Object task2 = null;
+        if (task1 instanceof RecurringTask && task2 instanceof TransientTask || task1 instanceof TransientTask && task2 instanceof RecurringTask) {
+            // Convert task start times and durations to Date objects or similar to compare
+            LocalDate task1Start = parse(((RecurringTask) task1).getStartDate());
+            LocalDate task1End = parse(((RecurringTask) task1).getEndDate());
+            LocalDate task2Date = parse(((TransientTask) task2).date);
+
+            // Check if the transient task date falls between the start and end dates of the recurring task
+            if ((task2Date.isEqual(task1Start) || task2Date.isAfter(task1Start)) && (task2Date.isBefore(task1End) || task2Date.isEqual(task1End))) {
+                return true; // There is an overlap
+            }
+        }
+        return false; // No overlap
     }
 }

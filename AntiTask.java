@@ -1,5 +1,6 @@
 // Anti-Task class
 class AntiTask extends Task {
+    public String date;
     RecurringTask recurringTask; // Reference to the recurring task that this anti-task cancels
 
     // Constructor to initialize anti-task properties

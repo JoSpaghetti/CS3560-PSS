@@ -39,7 +39,7 @@ public class PPSApp{
                             startTime = timeValidator.hourValidator("Enter start time (HH:mm):");
 
                             duration = timeValidator.durationValidator("Enter duration (HH.mm):");
-                            
+
                         // recurring tasks
                             if (taskType == 1) {
                                 System.out.println("\n[1] Class\n[2] Study\n[3] Sleep\n[4] Exercise\n[5] Work\n[6] Meal\nEnter task category: ");
@@ -51,11 +51,11 @@ public class PPSApp{
 
                                     System.out.println("Enter frequency: ");
                                     frequency = Integer.parseInt(scanner.nextLine());
-                                    
+
                                     while (!isStartBeforeEnd) {
                                         startDate = timeValidator.dateValidator("Enter start date (YYYY-MM-DD):");
                                         endDate = timeValidator.dateValidator("Enter end date (YYYY-MM-DD):");
-                                        
+
 
                                         int startBeforeEnd = timeValidator.dateOverlap(startDate, endDate);//validates the start and end times
                                         if (startBeforeEnd == 1) {//check to see if the end date equals the start date
@@ -74,7 +74,7 @@ public class PPSApp{
                                     break;
                                 }
 
-                            } 
+                            }
                             // transient tasks
                             else if (taskType == 2) {
                                 System.out.println("\n[1] Visit\n[2] Shopping\n[3] Appointment\nEnter task category:");
@@ -89,7 +89,7 @@ public class PPSApp{
                                     System.out.println("Please enter a valid task type and try again.");
                                     break;
                                 }
-                            } 
+                            }
                             // anti-tasks
                             else if (taskType == 3) {
                                 // Logic to select a recurring task to cancel
@@ -109,7 +109,7 @@ public class PPSApp{
                                     System.out.println("Recurring task not found."); // Handle case where recurring task is not found
                                 }
                             }
-                        
+
                         // breaks out of the while loop because the task has been added
                         added = true;
                         }
@@ -145,7 +145,29 @@ public class PPSApp{
                 case 6: //write to File
                     System.out.print("Enter file name (no file type needed):");
                     String fileName = scanner.nextLine();
-                    pss.writeToFile(fileName);
+                    String writePeriod;
+                    String writeStartDate;
+                    boolean isWriteTrue = false;
+                    while (!isWriteTrue) {
+                        System.out.print("Do you want to write a day, week, or month to a file:");
+                        writePeriod = scanner.nextLine().toLowerCase();
+                        writeStartDate = timeValidator.dateValidator("What is the start date for your write:"); //checks if the date inputted is valid
+                        switch (writePeriod) {
+                            case "day" -> {
+                                pss.writeToFile(fileName, writeStartDate, 1);
+                                isWriteTrue = true;
+                            }
+                            case "week" -> {
+                                pss.writeToFile(fileName, writeStartDate, 7);
+                                isWriteTrue = true;
+                            }
+                            case "month" -> {
+                                pss.writeToFile(fileName, writeStartDate, 31);
+                                isWriteTrue = true;
+                            }
+                            default -> System.out.print("The input received is not valid. Please try again");
+                        }
+                    }
                     System.out.print("File Written\n");
                     break;
 
@@ -156,8 +178,11 @@ public class PPSApp{
                     break;
 
                 case 8: //view schedule
-                    System.out.print("-Schedule-");
-                    pss.showSchedule();
+                    String startDate = "";
+                    startDate = timeValidator.dateValidator("Enter start date (YYYY-MM-DD):");
+                    System.out.print("View schedule for how many days from start date? ");
+                    int numDays = Integer.parseInt(scanner.nextLine());
+                    pss.showSchedule(startDate, numDays);
                     break;
 
                 case 9: //exit

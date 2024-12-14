@@ -1,0 +1,36 @@
+[
+	{
+ 		"ID": "001", 
+		"Name": "Go to Store for socks", 
+		"Task Type": "TRANSIENT", 
+		"Date": "20200415", 
+		"Start Time": "10.25", 
+		"Duration": "0.75" 
+	},
+	{
+ 		"ID": "002", 
+		"Name": "Take a walk", 
+		"Task Type": "Exercise", 
+		"Start Date": "20200415", 
+		"Start Time": "10.25", 
+		"Duration": "0.75", 
+		"End Date": "20200715", 
+		"Frequency": "10.25" 
+	},
+	{
+ 		"ID": "003", 
+		"Name": "I really didn't want to walk", 
+		"Task Type": "ANTI_TASK", 
+		"Date": "0.75", 
+		"Start Time": "10.25", 
+		"Duration": "0.75" 
+	},
+	{
+ 		"ID": "004", 
+		"Name": "pookie sophia", 
+		"Task Type": "TRANSIENT", 
+		"Date": "2024-12-09", 
+		"Start Time": "12:20", 
+		"Duration": "10.0" 
+	}
+]
