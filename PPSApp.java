@@ -178,8 +178,11 @@ public class PPSApp{
                     break;
 
                 case 8: //view schedule
-                    System.out.print("-Schedule-");
-                    pss.showSchedule();
+                    String startDate = "";
+                    startDate = timeValidator.dateValidator("Enter start date (YYYY-MM-DD):");
+                    System.out.print("View schedule for how many days from start date? ");
+                    int numDays = Integer.parseInt(scanner.nextLine());
+                    pss.showSchedule(startDate, numDays);
                     break;
 
                 case 9: //exit

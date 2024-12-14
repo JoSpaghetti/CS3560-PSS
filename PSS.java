@@ -311,27 +311,33 @@ public void addTask(Task task) {
         System.out.println("Task not found."); // If task ID does not match
     }
 
-    public void showSchedule(){
-        String jsonFormat; //used to recreate JSON structure
+    public void showSchedule(String startDate, int numDays){
+        String schedule = "";
+        String jsonFormat = ""; //used to recreate JSON structure
         String taskType; //used to store task type
         for (Task task: tasks) {
+            jsonFormat = "";
             taskType = String.valueOf(task.getType());
-
             //use string format to format JSON output
-            if (task instanceof RecurringTask) { //need frequency
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
-                        task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+            if (task instanceof RecurringTask) {
+                if (isWithinDays(startDate, ((RecurringTask)task).startDate, numDays)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s \"Task Type\": %s, \"Start Date\": %s, \"Start Time\": %s, \"Duration\": %s, \"End Date\": %s, \"Frequency\": %s",
+                            task.getId(), task.getName(), taskType, ((RecurringTask) task).startDate, task.startTime, task.duration, ((RecurringTask) task).endDate, task.startTime);
+                }
             } else if (task instanceof TransientTask) {
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
-                        task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                if (isWithinDays(startDate, ((TransientTask)task).date, numDays)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                            task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
+                }
             } else if (task instanceof AntiTask) { //need date function
-                jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
+                if (isWithinDays(startDate, ((TransientTask)task).date, numDays)) {
+                    jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
                         task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
-            } else {
-                jsonFormat = "Error";
+                }
             }
-            System.out.print(jsonFormat);
+            schedule += jsonFormat;
         }
+        System.out.print(schedule);
     }
 
     public String nameValidation (String promptUser) {
@@ -417,55 +423,54 @@ public void addTask(Task task) {
         // Check if the difference is within the allowed range
         return Math.abs(daysDifference) <= days;
     }
-    // Method to remove a task by ID, including related anti-tasks if applicable
-public void removeTask(String id) {
-    Task toRemove = tasks.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
-    if (toRemove instanceof RecurringTask) {
-        // Remove all associated anti-tasks
-        tasks.removeIf(t -> t instanceof AntiTask && ((AntiTask) t).recurringTask.getId().equals(id));
-    }
-    if (toRemove != null) {
-        tasks.remove(toRemove);
-        System.out.println("Task removed with ID: " + id);
-    } else {
-        System.out.println("Task not found.");
-    }
-}
-// Method to check for conflicts when deleting an anti-task
-public void checkConflictsOnAntiTaskDeletion(String antiTaskId) {
-    AntiTask antiTask = (AntiTask) tasks.stream()
-        .filter(t -> t.getId().equals(antiTaskId) && t instanceof AntiTask)
-        .findFirst()
-        .orElse(null);
     
-    if (antiTask != null) {
-        // Assume the method isOverlapping() checks for any overlaps in the schedule
-        boolean conflictExists = isOverlapping(antiTask.recurringTask);
-        if (conflictExists) {
-            System.out.println("Warning: Removing this anti-task will cause scheduling conflicts.");
+    // Method to remove a task by ID, including related anti-tasks if applicable
+    public void removeTask(String id) {
+        Task toRemove = tasks.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
+        if (toRemove instanceof RecurringTask) {
+            // Remove all associated anti-tasks
+            tasks.removeIf(t -> t instanceof AntiTask && ((AntiTask) t).recurringTask.getId().equals(id));
         }
-        tasks.remove(antiTask);
-        System.out.println("Anti-task removed with ID: " + antiTaskId);
-    } else {
-        System.out.println("Anti-task not found.");
-    }
-}
-
-// Method to check if two tasks overlap
-public boolean isOverlapping(Task task1, Task task2) {
-    if (task1 instanceof RecurringTask && task2 instanceof TransientTask || task1 instanceof TransientTask && task2 instanceof RecurringTask) {
-        // Convert task start times and durations to Date objects or similar to compare
-        LocalDate task1Start = LocalDate.parse(((RecurringTask) task1).getStartDate());
-        LocalDate task1End = LocalDate.parse(((RecurringTask) task1).getEndDate());
-        LocalDate task2Date = LocalDate.parse(((TransientTask) task2).date);
-
-        // Check if the transient task date falls between the start and end dates of the recurring task
-        if ((task2Date.isEqual(task1Start) || task2Date.isAfter(task1Start)) && (task2Date.isBefore(task1End) || task2Date.isEqual(task1End))) {
-            return true; // There is an overlap
+        if (toRemove != null) {
+            tasks.remove(toRemove);
+            System.out.println("Task removed with ID: " + id);
+        } else {
+            System.out.println("Task not found.");
         }
     }
-    return false; // No overlap
-}
+    // Method to check for conflicts when deleting an anti-task
+    public void checkConflictsOnAntiTaskDeletion(String antiTaskId) {
+        AntiTask antiTask = (AntiTask) tasks.stream()
+            .filter(t -> t.getId().equals(antiTaskId) && t instanceof AntiTask)
+            .findFirst()
+            .orElse(null);
+        
+        if (antiTask != null) {
+            // Assume the method isOverlapping() checks for any overlaps in the schedule
+            boolean conflictExists = isOverlapping(antiTask.recurringTask);
+            if (conflictExists) {
+                System.out.println("Warning: Removing this anti-task will cause scheduling conflicts.");
+            }
+            tasks.remove(antiTask);
+            System.out.println("Anti-task removed with ID: " + antiTaskId);
+        } else {
+            System.out.println("Anti-task not found.");
+        }
+    }
 
+    // Method to check if two tasks overlap
+    public boolean isOverlapping(Task task1, Task task2) {
+        if (task1 instanceof RecurringTask && task2 instanceof TransientTask || task1 instanceof TransientTask && task2 instanceof RecurringTask) {
+            // Convert task start times and durations to Date objects or similar to compare
+            LocalDate task1Start = LocalDate.parse(((RecurringTask) task1).getStartDate());
+            LocalDate task1End = LocalDate.parse(((RecurringTask) task1).getEndDate());
+            LocalDate task2Date = LocalDate.parse(((TransientTask) task2).date);
 
+            // Check if the transient task date falls between the start and end dates of the recurring task
+            if ((task2Date.isEqual(task1Start) || task2Date.isAfter(task1Start)) && (task2Date.isBefore(task1End) || task2Date.isEqual(task1End))) {
+                return true; // There is an overlap
+            }
+        }
+        return false; // No overlap
+    }
 }
