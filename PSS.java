@@ -12,6 +12,8 @@ import java.util.regex.Pattern;
 import java.io.File; 
 import java.io.FileNotFoundException;
 
+import static java.time.LocalDate.parse;
+
 
 // Enum for task types
 enum TaskType {
@@ -40,20 +42,21 @@ public class PSS {
   // Modify the addTask method to check for overlaps before adding a task
 public void addTask(Task task) {
     for (Task existingTask : tasks) {
-        if (isOverlapping(task, existingTask)) {
-            System.out.println("Error: Task overlaps with existing task " + existingTask.getName());
-            return; // Prevent adding the task
+        if (!isOverlapping((Task) task)) {
+            continue;
         }
+        System.out.println("Error: Task overlaps with existing task " + existingTask.getName());
+        return; // Prevent adding the task
     }
     tasks.add(task);
     System.out.println("Task added successfully: " + task.getName());
 }
 
     // Method to remove a task by ID
-    public void removeTask(String id) {
-        tasks.removeIf(task -> task.getId().equals(id));
-        System.out.println("Task removed with ID: " + id);
-    }
+//    public void removeTask(String id) {
+//        tasks.removeIf(task -> task.getId().equals(id));
+//        System.out.println("Task removed with ID: " + id);
+//    }
 
     // Method to edit an existing task
     public void editTask(String id) {
@@ -330,7 +333,7 @@ public void addTask(Task task) {
                             task.getId(), task.getName(), taskType, ((TransientTask) task).date, task.startTime, task.duration);
                 }
             } else if (task instanceof AntiTask) { //need date function
-                if (isWithinDays(startDate, ((TransientTask)task).date, numDays)) {
+                if (isWithinDays(startDate, ((AntiTask)task).date, numDays)) {
                     jsonFormat = String.format("\n \"ID\": %s, \"Name\": %s, \"Task Type\": %s, \"Date\": %s, \"Start Time\": %s, \"Duration\": %s",
                         task.getId(), task.getName(), taskType, task.duration, task.startTime, task.duration);
                 }
@@ -415,8 +418,8 @@ public void addTask(Task task) {
     public static boolean isWithinDays(String date1, String date2, int days) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        LocalDate firstDate = LocalDate.parse(date1, formatter); //formats first date
-        LocalDate secondDate = LocalDate.parse(date2, formatter); //formats second date
+        LocalDate firstDate = parse(date1, formatter); //formats first date
+        LocalDate secondDate = parse(date2, formatter); //formats second date
 
         long daysDifference = ChronoUnit.DAYS.between(firstDate, secondDate);
 
@@ -459,12 +462,13 @@ public void addTask(Task task) {
     }
 
     // Method to check if two tasks overlap
-    public boolean isOverlapping(Task task1, Task task2) {
+    public boolean isOverlapping(Task task1) {
+        Object task2 = null;
         if (task1 instanceof RecurringTask && task2 instanceof TransientTask || task1 instanceof TransientTask && task2 instanceof RecurringTask) {
             // Convert task start times and durations to Date objects or similar to compare
-            LocalDate task1Start = LocalDate.parse(((RecurringTask) task1).getStartDate());
-            LocalDate task1End = LocalDate.parse(((RecurringTask) task1).getEndDate());
-            LocalDate task2Date = LocalDate.parse(((TransientTask) task2).date);
+            LocalDate task1Start = parse(((RecurringTask) task1).getStartDate());
+            LocalDate task1End = parse(((RecurringTask) task1).getEndDate());
+            LocalDate task2Date = parse(((TransientTask) task2).date);
 
             // Check if the transient task date falls between the start and end dates of the recurring task
             if ((task2Date.isEqual(task1Start) || task2Date.isAfter(task1Start)) && (task2Date.isBefore(task1End) || task2Date.isEqual(task1End))) {
